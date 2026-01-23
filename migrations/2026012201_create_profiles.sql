@@ -1,6 +1,6 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS public.profiles (
-    id uuid PRIMARY KEY,
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     username text,
     primary_email text,
     display_name text,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     location text,
     birth_date date,
     avatar_url text,
-    subscription_plan text, -- Adjusted from USER-DEFINED for compatibility
+    subscription_plan text,
     is_private_account boolean DEFAULT false,
     last_worked_out_at timestamp with time zone,
     total_workouts integer DEFAULT 0,

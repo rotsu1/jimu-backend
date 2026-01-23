@@ -16,7 +16,7 @@ BEGIN
     RETURNING id INTO new_profile_id;
 
     -- 2. Create the User Settings for this new profile
-    INSERT INTO public.user_settings (user_id, weight_unit, theme)
+    INSERT INTO public.user_settings (user_id)
     VALUES (new_profile_id);
 
     -- 3. Update the incoming Identity record with the new Profile ID
