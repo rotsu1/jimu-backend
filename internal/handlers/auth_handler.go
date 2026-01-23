@@ -58,7 +58,7 @@ func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 
 	secret := os.Getenv("JIMU_SECRET")
 
-	token, err := auth.GenerateJimuToken(user.ID.String(), secret)
+	token, err := auth.GenerateToken(user.ID.String(), secret)
 	if err != nil {
 		log.Printf("Token generation error: %v", err)
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
