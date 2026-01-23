@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     username text,
-    primary_email text,
     display_name text,
     bio text,
     location text,

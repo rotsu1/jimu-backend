@@ -9,7 +9,6 @@ import (
 type Profile struct {
 	ID               uuid.UUID `json:"id" db:"id"`
 	Username         string    `json:"username" db:"username"`
-	PrimaryEmail     string    `json:"primary_email" db:"primary_email"`
 	DisplayName      string    `json:"display_name" db:"display_name"`
 	Bio              string    `json:"bio" db:"bio"`
 	Location         string    `json:"location" db:"location"`

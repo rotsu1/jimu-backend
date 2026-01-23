@@ -9,10 +9,7 @@ DECLARE
 BEGIN
     -- 1. Create the Profile first (since identities needs profile_id)
     -- We use the returning ID to link everything together
-    INSERT INTO public.profiles (primary_email)
-    VALUES (
-        NEW.provider_email
-    )
+    INSERT INTO public.profiles DEFAULT VALUES
     RETURNING id INTO new_profile_id;
 
     -- 2. Create the User Settings for this new profile
