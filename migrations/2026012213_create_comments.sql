@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.comments (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -17,5 +17,5 @@ CREATE INDEX IF NOT EXISTS idx_comments_created_at ON public.comments(created_at
 CREATE INDEX IF NOT EXISTS idx_workouts_user_id ON public.workouts(user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_privacy_status ON public.profiles(id, is_private_account);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.comments;

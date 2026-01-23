@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.user_devices (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid REFERENCES public.profiles(id),
@@ -12,5 +12,5 @@ CREATE TABLE IF NOT EXISTS public.user_devices (
 CREATE INDEX IF NOT EXISTS idx_user_devices_user_id ON public.user_devices(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_devices_fcm_token ON public.user_devices(fcm_token);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.user_devices;

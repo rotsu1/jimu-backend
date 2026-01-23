@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.user_identities (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS public.user_identities (
     UNIQUE(provider_name, provider_user_id)
 );
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.user_identities;

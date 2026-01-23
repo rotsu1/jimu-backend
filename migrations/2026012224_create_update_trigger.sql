@@ -1,5 +1,6 @@
---- +up
--- Create a generic trigger function to update the updated_at column
+-- +migrate Up
+
+-- +migrate StatementBegin
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -10,8 +11,9 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +migrate StatementEnd
 
--- Create triggers for all tables with updated_at column
+-- Triggers (These are fine without the tags because they are simple one-liners)
 
 -- profiles
 CREATE TRIGGER update_profiles_updated_at
@@ -103,7 +105,7 @@ CREATE TRIGGER update_user_devices_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
---- +down
+-- +migrate Down
 -- Drop triggers
 DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 DROP TRIGGER IF EXISTS update_exercises_updated_at ON public.exercises;
@@ -117,6 +119,9 @@ DROP TRIGGER IF EXISTS update_workout_images_updated_at ON public.workout_images
 DROP TRIGGER IF EXISTS update_workout_sets_updated_at ON public.workout_sets;
 DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON public.subscriptions;
 DROP TRIGGER IF EXISTS update_user_devices_updated_at ON public.user_devices;
+DROP TRIGGER IF EXISTS update_user_identities_updated_at ON public.user_identities;
+DROP TRIGGER IF EXISTS update_exercise_target_muscles_updated_at ON public.exercise_target_muscles;
+DROP TRIGGER IF EXISTS update_user_sessions_updated_at ON public.user_sessions;
 
 -- Drop function
 DROP FUNCTION IF EXISTS update_updated_at_column();

@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid PRIMARY KEY,
     username text,
@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- Create index on username for faster lookups
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON public.profiles(username);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.profiles;

@@ -1,4 +1,6 @@
---- +up
+-- +migrate Up
+
+-- +migrate StatementBegin
 -- Create a function to provision a new user on signup
 CREATE OR REPLACE FUNCTION public.fn_on_signup_provisioning()
 RETURNS TRIGGER AS $$
@@ -24,14 +26,17 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+-- +migrate StatementEnd
 
+-- +migrate StatementBegin
 -- Create a trigger to add profile after inserting a new identity
 CREATE TRIGGER tr_provision_user_on_signup
     BEFORE INSERT ON public.user_identities
     FOR EACH ROW
     WHEN (NEW.user_id IS NULL) -- Only run this if we haven't manually linked a user
     EXECUTE FUNCTION public.fn_on_signup_provisioning();
+-- +migrate StatementEnd
 
---- +down
+-- +migrate Down
 DROP FUNCTION IF EXISTS public.fn_on_signup_provisioning;
 DROP TRIGGER IF EXISTS tr_provision_user_on_signup ON public.user_identities;

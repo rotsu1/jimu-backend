@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.routines (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS public.routines (
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_routines_user_id ON public.routines(user_id);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.routines;

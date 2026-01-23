@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.comment_likes (
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     comment_id uuid REFERENCES public.comments(id) ON DELETE CASCADE,
@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS public.comment_likes (
 CREATE INDEX IF NOT EXISTS idx_comment_likes_user_id ON public.comment_likes(user_id);
 CREATE INDEX IF NOT EXISTS idx_comment_likes_comment_id ON public.comment_likes(comment_id);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.comment_likes;

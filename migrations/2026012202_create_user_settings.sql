@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.user_settings (
     user_id uuid PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
     notify_new_follower boolean DEFAULT true,
@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
     updated_at timestamp with time zone DEFAULT now()
 );
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.user_settings;

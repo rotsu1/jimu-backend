@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.routine_sets (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     routine_exercise_id uuid REFERENCES public.routine_exercises(id) ON DELETE CASCADE,
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS public.routine_sets (
 
 CREATE INDEX IF NOT EXISTS idx_routine_sets_routine_exercise_id ON public.routine_sets(routine_exercise_id);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.routine_sets;

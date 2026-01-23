@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS public.workouts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -19,5 +19,5 @@ CREATE INDEX IF NOT EXISTS idx_workouts_user_id ON public.workouts(user_id);
 CREATE INDEX IF NOT EXISTS idx_workouts_started_at ON public.workouts(started_at);
 CREATE INDEX IF NOT EXISTS idx_workouts_created_at ON public.workouts(created_at);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.workouts;

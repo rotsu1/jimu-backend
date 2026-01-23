@@ -1,4 +1,4 @@
---- +up
+-- +migrate Up
 CREATE TABLE public.blocked_users (
     blocker_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     blocked_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -9,5 +9,5 @@ CREATE TABLE public.blocked_users (
 -- Index for checking "Is this user blocking me?" quickly
 CREATE INDEX idx_blocked_lookup ON public.blocked_users(blocked_id, blocker_id);
 
---- +down
+-- +migrate Down
 DROP TABLE IF EXISTS public.blocked_users;
