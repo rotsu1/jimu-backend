@@ -1,0 +1,14 @@
+# Go / backend
+/bin/
+*.exe
+*.log
+*.out
+*.test
+
+# IDEs / editors
+.vscode/
+.idea/
+*.swp
+
+.env
+.DS_Store
