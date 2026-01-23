@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.user_sessions (
     is_revoked boolean DEFAULT false,
     expires_at timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now()
+    updated_at timestamp with time zone DEFAULT now()
 );
 
 -- Index for fast lookups during token refresh

@@ -25,9 +25,27 @@ CREATE TRIGGER update_exercises_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+-- exercise_target_muscles
+CREATE TRIGGER update_exercise_target_muscles_updated_at
+    BEFORE UPDATE ON public.exercise_target_muscles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- user_settings
 CREATE TRIGGER update_user_settings_updated_at
     BEFORE UPDATE ON public.user_settings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- user_sessions
+CREATE TRIGGER update_user_sessions_updated_at
+    BEFORE UPDATE ON public.user_sessions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- user_identities
+CREATE TRIGGER update_user_identities_updated_at
+    BEFORE UPDATE ON public.user_identities
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

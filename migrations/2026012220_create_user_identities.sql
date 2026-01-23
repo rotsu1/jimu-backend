@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS public.user_identities (
     provider_email text,
     last_sign_in_at timestamp with time zone DEFAULT now(),
     created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
     UNIQUE(provider_name, provider_user_id)
 );
 
