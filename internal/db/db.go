@@ -1,34 +1,34 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"os"
 
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitDB() (*sql.DB, error) {
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-
-	psqlInfo := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname,
+func InitDB() (*pgxpool.Pool, error) {
+	// You can still use your individual env vars or just one DATABASE_URL
+	connString := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
 	)
 
-	db, err := sql.Open("postgres", psqlInfo)
-
+	// Create the pool
+	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open DB: %w", err)
+		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping DB: %w", err)
+	// Ping to check connection
+	if err := pool.Ping(context.Background()); err != nil {
+		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
 
-	return db, nil
+	return pool, nil
 }
