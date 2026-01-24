@@ -3,7 +3,6 @@
 *.exe
 *.log
 *.out
-*.test
 
 # IDEs / editors
 .vscode/
