@@ -20,6 +20,8 @@ type Profile struct {
 	TotalWorkouts    int        `json:"total_workouts" db:"total_workouts"`
 	CurrentStreak    int        `json:"current_streak" db:"current_streak"`
 	TotalWeight      int        `json:"total_weight" db:"total_weight"`
+	FollowersCount   int        `json:"followers_count" db:"followers_count"`
+	FollowingCount   int        `json:"following_count" db:"following_count"`
 	CreatedAt        time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at" db:"updated_at"`
 }

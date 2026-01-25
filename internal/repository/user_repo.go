@@ -100,6 +100,8 @@ func (r *UserRepository) GetProfileByID(
 		&profile.TotalWorkouts,
 		&profile.CurrentStreak,
 		&profile.TotalWeight,
+		&profile.FollowersCount,
+		&profile.FollowingCount,
 		&profile.CreatedAt,
 		&profile.UpdatedAt,
 	)
