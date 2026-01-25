@@ -80,7 +80,7 @@ func (r *UserRepository) GetIdentityByProvider(
 func (r *UserRepository) GetProfileByID(ctx context.Context, id string) (*models.Profile, error) {
 	var profile models.Profile
 
-	err := r.DB.QueryRow(ctx, getProfileQuery, id).Scan(
+	err := r.DB.QueryRow(ctx, getProfileByIDQuery, id).Scan(
 		&profile.ID,
 		&profile.Username,
 		&profile.DisplayName,
@@ -166,6 +166,19 @@ func (r *UserRepository) UpdateProfile(
 	_, err := r.DB.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to update profile: %w", err)
+	}
+
+	return nil
+}
+
+func (r *UserRepository) DeleteProfile(ctx context.Context, id string) error {
+	commandTag, err := r.DB.Exec(ctx, deleteProfileByIDQuery, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete profile: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("profile not found: %s", id)
 	}
 
 	return nil

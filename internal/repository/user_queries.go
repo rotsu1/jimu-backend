@@ -19,7 +19,7 @@ const updateUserIdentityQuery = `
 			WHERE provider_name = 'google' AND provider_user_id = $1
 `
 
-const getProfileQuery = `
+const getProfileByIDQuery = `
 			SELECT 
 			p.id,
 			p.username,
@@ -86,4 +86,9 @@ const getProfileQuery = `
 			WHERE p.id = $2
 			-- If there is any block relationship, return no rows (treat it as non-existent)
 			AND b.blocker_id IS NULL;
+`
+
+const deleteProfileByIDQuery = `
+			DELETE FROM public.profiles
+			WHERE id = $1
 `
