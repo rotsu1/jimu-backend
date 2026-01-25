@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rotsu1/jimu-backend/internal/models"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/rotsu1/jimu-backend/internal/repository/testutil"
@@ -199,15 +201,7 @@ func TestExistingGetProfileByID(t *testing.T) {
 	repo := NewUserRepository(db)
 	ctx := context.Background()
 
-	username := "testuser"
-
-	var id uuid.UUID
-	err := db.QueryRow(
-		ctx,
-		"INSERT INTO profiles (username) VALUES ($1) RETURNING id",
-		username,
-	).Scan(&id)
-
+	id, _, err := testutil.InsertProfile(ctx, db, "testuser")
 	if err != nil {
 		t.Fatalf("Failed to insert profile: %v", err)
 	}
@@ -245,23 +239,15 @@ func TestNullFieldsGetProfileByID(t *testing.T) {
 	repo := NewUserRepository(db)
 	ctx := context.Background()
 
-	var id uuid.UUID
 	username := "testuser"
-	err := db.QueryRow(
-		ctx,
-		"INSERT INTO profiles (username) VALUES ($1) RETURNING id",
-		username,
-	).Scan(&id)
-	if err != nil {
-		t.Fatalf("Failed to insert profile: %v", err)
-	}
+	id, _, err := testutil.InsertProfile(ctx, db, username)
 
 	profile, err := repo.GetProfileByID(ctx, id, id)
 	if err != nil {
 		t.Fatalf("Profile not found: %v", err)
 	}
 
-	if profile.Username != username {
+	if *profile.Username != username {
 		t.Errorf("Username mismatch: got %v, want %v", profile.Username, username)
 	}
 	if profile.DisplayName != nil {
@@ -305,18 +291,227 @@ func TestNullFieldsGetProfileByID(t *testing.T) {
 	}
 }
 
-// func TestDeleteProfile(t *testing.T) {
-// 	db := testutil.SetupTestDB(t)
-// 	defer db.Close()
-// 	repo := NewUserRepository(db)
-// 	ctx := context.Background()
+func TestUpdateProfile(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
 
-// 	googleID := "1234567890"
-// 	email := "test@example.com"
+	id, updatedAt, err := testutil.InsertProfile(ctx, db, "testuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
 
-// 	profile, err := repo.UpsertGoogleUser(ctx, googleID, email)
-// 	if err != nil {
-// 		t.Fatalf("Failed to upsert: %v", err)
-// 	}
+	newUsername := "newtestuser"
+	displayName := "New Test User"
+	updates := models.UpdateProfileRequest{
+		Username:    &newUsername,
+		DisplayName: &displayName,
+	}
+	err = repo.UpdateProfile(ctx, id, updates)
+	if err != nil {
+		t.Fatalf("Failed to update profile: %v", err)
+	}
 
-// }
+	profile, err := repo.GetProfileByID(ctx, id, id)
+	if err != nil {
+		t.Fatalf("Profile not found: %v", err)
+	}
+
+	if *profile.Username != newUsername {
+		t.Errorf("Username was not updated: got %v, want %v", profile.Username, newUsername)
+	}
+	if *profile.DisplayName != displayName {
+		t.Errorf("DisplayName was not updated: got %v, want %v", profile.DisplayName, displayName)
+	}
+	if !profile.UpdatedAt.After(updatedAt) {
+		t.Errorf("UpdatedAt was not updated: got %v, want %v", profile.UpdatedAt, updatedAt)
+	}
+}
+
+func TestNotFoundUpdateProfile(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	id := uuid.New()
+	err := repo.UpdateProfile(ctx, id, models.UpdateProfileRequest{})
+	if err != nil {
+		t.Errorf("Expected to silently fail, but got %v", err)
+	}
+
+	displayName := "New Name"
+	reqWithData := models.UpdateProfileRequest{
+		DisplayName: &displayName,
+	}
+	err = repo.UpdateProfile(ctx, id, reqWithData)
+	if err == nil {
+		t.Error("Expected error when profile is not found, but got nil")
+	}
+
+	if !errors.Is(err, ErrProfileNotFound) {
+		t.Errorf("Expected ErrProfileNotFound, but got %v", err)
+	}
+}
+
+func TestUpdateProfileWithNullFields(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	var id uuid.UUID
+	username := "testuser"
+	displayName := "Test User"
+	var updatedAt time.Time
+	err := db.QueryRow(
+		ctx,
+		"INSERT INTO profiles (username, display_name) VALUES ($1, $2) RETURNING id, updated_at",
+		username,
+		displayName,
+	).Scan(&id, &updatedAt)
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	var updatedReq models.UpdateProfileRequest
+	displayNameNil := ""
+	birthDateNil := time.Time{}
+	updatedReq.DisplayName = &displayNameNil
+	updatedReq.BirthDate = &birthDateNil
+
+	err = repo.UpdateProfile(ctx, id, updatedReq)
+	if err != nil {
+		t.Fatalf("Failed to update profile: %v", err)
+	}
+
+	profile, err := repo.GetProfileByID(ctx, id, id)
+	if err != nil {
+		t.Fatalf("Profile not found: %v", err)
+	}
+
+	if profile.DisplayName != nil {
+		t.Errorf("DisplayName is not nil: got %v, want nil", profile.DisplayName)
+	}
+	if !profile.UpdatedAt.After(updatedAt) {
+		t.Errorf("UpdatedAt was not updated: got %v, want %v", profile.UpdatedAt, updatedAt)
+	}
+}
+
+func TestNothingToUpdateUpdateProfile(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	id, updatedAt, err := testutil.InsertProfile(ctx, db, "testuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	err = repo.UpdateProfile(ctx, id, models.UpdateProfileRequest{})
+	if err != nil {
+		t.Fatalf("Failed to update profile: %v", err)
+	}
+
+	profile, err := repo.GetProfileByID(ctx, id, id)
+	if err != nil {
+		t.Fatalf("Profile not found: %v", err)
+	}
+
+	if profile.UpdatedAt != updatedAt {
+		t.Errorf("UpdatedAt was not the same: got %v, want %v", profile.UpdatedAt, updatedAt)
+	}
+}
+
+func TestConstraintViolationUpdateProfile(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	username1 := "testuser1"
+	id1, _, err := testutil.InsertProfile(ctx, db, username1)
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+	username2 := "testuser2"
+	_, _, err = testutil.InsertProfile(ctx, db, username2)
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+	updatedReq := models.UpdateProfileRequest{
+		Username: &username2,
+	}
+	err = repo.UpdateProfile(ctx, id1, updatedReq)
+
+	if err == nil {
+		t.Error("Expected primary key violation error, but got nil")
+	}
+	if !errors.Is(err, ErrUsernameTaken) {
+		t.Errorf("Expected ErrUsernameTaken, but got %v", err)
+	}
+}
+
+func TestDeleteProfile(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	googleID := "1234567890"
+	email := "test@example.com"
+
+	profile, err := repo.UpsertGoogleUser(ctx, googleID, email)
+	if err != nil {
+		t.Fatalf("Failed to upsert: %v", err)
+	}
+
+	id := profile.ID
+
+	err = repo.DeleteProfile(ctx, id)
+	if err != nil {
+		t.Fatalf("Failed to delete profile: %v", err)
+	}
+
+	_, err = repo.GetProfileByID(ctx, id, id)
+	if err == nil {
+		t.Error("Expected profile to be deleted, but got nil")
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("Expected pgx.ErrNoRows, but got %v", err)
+	}
+
+	_, err = repo.GetUserSettingsByID(ctx, id)
+	if err == nil {
+		t.Error("Expected user settings to be deleted, but got nil")
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("Expected pgx.ErrNoRows, but got %v", err)
+	}
+
+	_, err = repo.GetIdentityByProvider(ctx, "google", googleID)
+	if err == nil {
+		t.Error("Expected identity to be deleted, but got nil")
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("Expected pgx.ErrNoRows, but got %v", err)
+	}
+}
+
+func TestNotFoundDeleteProfile(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	id := uuid.New()
+	err := repo.DeleteProfile(ctx, id)
+	if err == nil {
+		t.Error("Expected error when profile is not found, but got nil")
+	}
+	if !errors.Is(err, ErrProfileNotFound) {
+		t.Errorf("Expected ErrProfileNotFound, but got %v", err)
+	}
+}
