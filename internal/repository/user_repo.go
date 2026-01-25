@@ -21,20 +21,23 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	}
 }
 
-func (r *UserRepository) UpsertGoogleUser(ctx context.Context, googleID string, email string) (*models.Profile, error) {
+func (r *UserRepository) UpsertGoogleUser(
+	ctx context.Context,
+	googleID string,
+	email string,
+) (*models.Profile, error) {
 	// Check if the Google account is already registered in the Identity table
-	var userID uuid.UUID
-	queryCheck := `SELECT user_id FROM user_identities WHERE provider_name = 'google' AND provider_user_id = $1`
-
-	err := r.DB.QueryRow(ctx, queryCheck, googleID).Scan(&userID)
+	identity, err := r.GetIdentityByProvider(ctx, "google", googleID)
 
 	if err == pgx.ErrNoRows {
 		// If the user is new, insert the record into the Identity table
 		// This will trigger the DB trigger that creates the Profile automatically
+		var userID uuid.UUID
 		err = r.DB.QueryRow(ctx, insertUserIdentityQuery, googleID, email).Scan(&userID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new identity: %w", err)
 		}
+		return &models.Profile{ID: userID}, nil
 	} else if err != nil {
 		return nil, err
 	} else {
@@ -46,7 +49,32 @@ func (r *UserRepository) UpsertGoogleUser(ctx context.Context, googleID string, 
 	}
 
 	// Return the Profile with the userID
-	return &models.Profile{ID: userID}, nil
+	return &models.Profile{ID: identity.UserID}, nil
+}
+
+func (r *UserRepository) GetIdentityByProvider(
+	ctx context.Context,
+	provider string,
+	providerUserID string,
+) (*models.UserIdentity, error) {
+	var userIdentity models.UserIdentity
+
+	err := r.DB.QueryRow(ctx, getUserIdentityByProviderQuery, provider, providerUserID).Scan(
+		&userIdentity.ID,
+		&userIdentity.UserID,
+		&userIdentity.ProviderName,
+		&userIdentity.ProviderUserID,
+		&userIdentity.ProviderEmail,
+		&userIdentity.LastSignInAt,
+		&userIdentity.CreatedAt,
+		&userIdentity.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &userIdentity, nil
 }
 
 func (r *UserRepository) GetProfileByID(ctx context.Context, id string) (*models.Profile, error) {

@@ -1,5 +1,12 @@
 package repository
 
+const getUserIdentityByProviderQuery = `
+			SELECT id, user_id, provider_name, provider_user_id, provider_email, last_sign_in_at, created_at, updated_at
+			FROM user_identities 
+			WHERE provider_name = $1 
+			AND provider_user_id = $2
+`
+
 const insertUserIdentityQuery = `
 			INSERT INTO user_identities (provider_name, provider_user_id, provider_email)
 			VALUES ('google', $1, $2)
