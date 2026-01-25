@@ -36,5 +36,18 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 		t.Fatalf("Failed to create pgxpool: %v", err)
 	}
 
+	cleanupTables(t, pool)
+
 	return pool
+}
+
+func cleanupTables(t *testing.T, db *pgxpool.Pool) {
+	t.Helper()
+
+	const query = `TRUNCATE TABLE public.profiles, public.user_identities RESTART IDENTITY CASCADE`
+
+	_, err := db.Exec(context.Background(), query)
+	if err != nil {
+		t.Fatalf("Failed to cleanup tables: %v", err)
+	}
 }

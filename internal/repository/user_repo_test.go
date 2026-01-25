@@ -2,11 +2,88 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/rotsu1/jimu-backend/internal/repository/testutil"
 )
+
+func TestGetIdentityByProvider(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	googleID := "1234567890"
+	email := "test@example.com"
+
+	_, err := db.Exec(ctx, insertUserIdentityQuery, googleID, email)
+	if err != nil {
+		t.Fatalf("Failed to insert identity: %v", err)
+	}
+
+	identity, err := repo.GetIdentityByProvider(ctx, "google", googleID)
+	if err != nil {
+		t.Fatalf("Identity not found: %v", err)
+	}
+
+	if identity == nil {
+		t.Error("Identity not found")
+	}
+
+	if identity.ProviderUserID != googleID {
+		t.Errorf("ProviderUserID mismatch: got %s, want %s", identity.ProviderUserID, googleID)
+	}
+	if identity.ProviderEmail == nil || *identity.ProviderEmail != email {
+		t.Errorf("ProviderEmail mismatch: got %v, want %s", identity.ProviderEmail, email)
+	}
+}
+
+func TestGetNotFoundIdentityByProvider(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	_, err := repo.GetIdentityByProvider(ctx, "google", "1234567890")
+	if err == nil {
+		t.Error("Expected error when identity is not found, but got nil")
+	}
+
+	if !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("Expected pgx.ErrNoRows, but got %v", err)
+	}
+}
+
+func TestNullFieldsIdentityByProvider(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	googleID := "1234567890"
+
+	_, err := db.Exec(
+		ctx,
+		"INSERT INTO user_identities (provider_name, provider_user_id) VALUES ($1, $2)",
+		"google",
+		googleID,
+	)
+	if err != nil {
+		t.Fatalf("Failed to insert identity: %v", err)
+	}
+
+	identity, err := repo.GetIdentityByProvider(ctx, "google", googleID)
+	if err != nil {
+		t.Fatalf("Identity not found: %v", err)
+	}
+
+	if identity.ProviderEmail != nil {
+		t.Error("ProviderEmail is not nil")
+	}
+}
 
 func TestNewUserUpsertGoogleUser(t *testing.T) {
 	db := testutil.SetupTestDB(t)
@@ -103,3 +180,19 @@ func TestExistingUserUpsertGoogleUser(t *testing.T) {
 		t.Errorf("UpdatedAt was not updated: got %v, want %v", updatedIdentity.UpdatedAt, identity.UpdatedAt)
 	}
 }
+
+// func TestDeleteProfile(t *testing.T) {
+// 	db := testutil.SetupTestDB(t)
+// 	defer db.Close()
+// 	repo := NewUserRepository(db)
+// 	ctx := context.Background()
+
+// 	googleID := "1234567890"
+// 	email := "test@example.com"
+
+// 	profile, err := repo.UpsertGoogleUser(ctx, googleID, email)
+// 	if err != nil {
+// 		t.Fatalf("Failed to upsert: %v", err)
+// 	}
+
+// }
