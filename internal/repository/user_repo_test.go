@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/rotsu1/jimu-backend/internal/repository/testutil"
 )
@@ -121,14 +122,25 @@ func TestNewUserUpsertGoogleUser(t *testing.T) {
 	}
 
 	// Check if the profile was created
-	var exists bool
-	err = db.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM profiles WHERE id = $1)", profile.ID).Scan(&exists)
+	var profileExists bool
+	err = db.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM profiles WHERE id = $1)", profile.ID).Scan(&profileExists)
 	if err != nil {
 		t.Fatalf("Failed to check profiles table: %v", err)
 	}
 
-	if !exists {
+	if !profileExists {
 		t.Error("Trigger failed: Profile row was not auto-generated")
+	}
+
+	// Check if user settings was created
+	var userSettingsExists bool
+	err = db.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM user_settings WHERE user_id = $1)", profile.ID).Scan(&userSettingsExists)
+	if err != nil {
+		t.Fatalf("Failed to check user_settings table: %v", err)
+	}
+
+	if !userSettingsExists {
+		t.Error("Trigger failed: User settings row was not auto-generated")
 	}
 }
 
@@ -178,6 +190,118 @@ func TestExistingUserUpsertGoogleUser(t *testing.T) {
 	}
 	if !updatedIdentity.UpdatedAt.After(identity.UpdatedAt) {
 		t.Errorf("UpdatedAt was not updated: got %v, want %v", updatedIdentity.UpdatedAt, identity.UpdatedAt)
+	}
+}
+
+func TestExistingGetProfileByID(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	username := "testuser"
+
+	var id uuid.UUID
+	err := db.QueryRow(
+		ctx,
+		"INSERT INTO profiles (username) VALUES ($1) RETURNING id",
+		username,
+	).Scan(&id)
+
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	profile, err := repo.GetProfileByID(ctx, id, id)
+	if err != nil {
+		t.Fatalf("Profile not found: %v", err)
+	}
+
+	if profile.ID != id {
+		t.Errorf("ID mismatch: got %v, want %v", profile.ID, id)
+	}
+}
+
+func TestNotFoundGetProfileByID(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	id := uuid.New()
+	_, err := repo.GetProfileByID(ctx, id, id)
+	if err == nil {
+		t.Error("Expected error when profile is not found, but got nil")
+	}
+
+	if !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("Expected pgx.ErrNoRows, but got %v", err)
+	}
+}
+
+func TestNullFieldsGetProfileByID(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	var id uuid.UUID
+	username := "testuser"
+	err := db.QueryRow(
+		ctx,
+		"INSERT INTO profiles (username) VALUES ($1) RETURNING id",
+		username,
+	).Scan(&id)
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	profile, err := repo.GetProfileByID(ctx, id, id)
+	if err != nil {
+		t.Fatalf("Profile not found: %v", err)
+	}
+
+	if profile.Username != username {
+		t.Errorf("Username mismatch: got %v, want %v", profile.Username, username)
+	}
+	if profile.DisplayName != nil {
+		t.Errorf("DisplayName is not nil: got %v, want nil", profile.DisplayName)
+	}
+	if profile.Bio != nil {
+		t.Errorf("Bio is not nil: got %v, want nil", profile.Bio)
+	}
+	if profile.Location != nil {
+		t.Errorf("Location is not nil: got %v, want nil", profile.Location)
+	}
+	if profile.BirthDate != nil {
+		t.Errorf("BirthDate is not nil: got %v, want nil", profile.BirthDate)
+	}
+	if profile.AvatarURL != nil {
+		t.Errorf("AvatarURL is not nil: got %v, want nil", profile.AvatarURL)
+	}
+	if profile.SubscriptionPlan != nil {
+		t.Errorf("SubscriptionPlan is not nil: got %v, want nil", profile.SubscriptionPlan)
+	}
+	if profile.IsPrivateAccount {
+		t.Errorf("IsPrivateAccount is not false: got %v, want false", profile.IsPrivateAccount)
+	}
+	if profile.LastWorkedOutAt != nil {
+		t.Errorf("LastWorkedOutAt is not nil: got %v, want nil", profile.LastWorkedOutAt)
+	}
+	if profile.TotalWorkouts != 0 {
+		t.Errorf("TotalWorkouts is not 0: got %v, want 0", profile.TotalWorkouts)
+	}
+	if profile.CurrentStreak != 0 {
+		t.Errorf("CurrentStreak is not 0: got %v, want 0", profile.CurrentStreak)
+	}
+	if profile.TotalWeight != 0 {
+		t.Errorf("TotalWeight is not 0: got %v, want 0", profile.TotalWeight)
+	}
+	if profile.CreatedAt.IsZero() {
+		t.Error("CreatedAt was not set")
+	}
+	if profile.UpdatedAt.IsZero() {
+		t.Error("UpdatedAt was not set")
 	}
 }
 
