@@ -13,6 +13,7 @@ import (
 	"github.com/rotsu1/jimu-backend/internal/repository/testutil"
 )
 
+// Test User Identity Get Functionality
 func TestGetIdentityByProvider(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	defer db.Close()
@@ -88,6 +89,7 @@ func TestNullFieldsIdentityByProvider(t *testing.T) {
 	}
 }
 
+// Test New User Upsert Google User Functionality
 func TestNewUserUpsertGoogleUser(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	defer db.Close()
@@ -195,6 +197,7 @@ func TestExistingUserUpsertGoogleUser(t *testing.T) {
 	}
 }
 
+// Test Existing User Get Profile By ID Functionality
 func TestExistingGetProfileByID(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	defer db.Close()
@@ -291,6 +294,7 @@ func TestNullFieldsGetProfileByID(t *testing.T) {
 	}
 }
 
+// Test Update Profile Functionality
 func TestUpdateProfile(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	defer db.Close()
@@ -454,6 +458,7 @@ func TestConstraintViolationUpdateProfile(t *testing.T) {
 	}
 }
 
+// Test Delete Profile Functionality
 func TestDeleteProfile(t *testing.T) {
 	db := testutil.SetupTestDB(t)
 	defer db.Close()
