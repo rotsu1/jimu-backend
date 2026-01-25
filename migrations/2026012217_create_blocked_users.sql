@@ -33,7 +33,7 @@ RETURNS TRIGGER AS $$
 BEGIN
     -- Check if User A has blocked User B OR if User B has blocked User A
     IF EXISTS (
-        SELECT 1 FROM public.blocks 
+        SELECT 1 FROM public.blocked_users 
         WHERE (blocker_id = NEW.follower_id AND blocked_id = NEW.following_id)
            OR (blocker_id = NEW.following_id AND blocked_id = NEW.follower_id)
     ) THEN
