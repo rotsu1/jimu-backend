@@ -56,5 +56,6 @@ AFTER INSERT OR UPDATE OR DELETE ON public.workout_sets
 FOR EACH ROW EXECUTE FUNCTION handle_set_weight_sync();
 
 -- +migrate Down
-DROP TABLE IF EXISTS public.workout_sets;
+DROP TRIGGER IF EXISTS tr_sync_set_weight ON public.workout_sets;
 DROP FUNCTION IF EXISTS handle_set_weight_sync;
+DROP TABLE IF EXISTS public.workout_sets;

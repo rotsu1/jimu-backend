@@ -45,6 +45,6 @@ CREATE TRIGGER tr_provision_user_on_signup
 -- +migrate StatementEnd
 
 -- +migrate Down
+DROP TRIGGER IF EXISTS tr_provision_user_on_signup ON public.
+DROP FUNCTION IF EXISTS public.fn_on_signup_provisioning;user_identities;
 DROP TABLE IF EXISTS public.user_identities;
-DROP FUNCTION IF EXISTS public.fn_on_signup_provisioning;
-DROP TRIGGER IF EXISTS tr_provision_user_on_signup ON public.user_identities;

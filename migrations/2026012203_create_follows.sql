@@ -50,4 +50,6 @@ CREATE TRIGGER tr_sync_follow_counts
     EXECUTE FUNCTION public.fn_on_follow_sync();
 
 -- +migrate Down
+DROP TRIGGER IF EXISTS tr_sync_follow_counts ON public.follows;
+DROP FUNCTION IF EXISTS public.fn_on_follow_sync;
 DROP TABLE IF EXISTS public.follows;
