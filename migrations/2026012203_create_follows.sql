@@ -11,5 +11,43 @@ CREATE TABLE IF NOT EXISTS public.follows (
 CREATE INDEX IF NOT EXISTS idx_follows_follower_id ON public.follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following_id ON public.follows(following_id);
 
+-- +migrate StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_on_follow_sync()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- 1. Handle NEW FOLLOWS (Only if they are auto-accepted or public)
+    IF (TG_OP = 'INSERT') THEN
+        IF (NEW.status = 'accepted') THEN
+            UPDATE public.profiles SET followers_count = followers_count + 1 WHERE id = NEW.following_id;
+            UPDATE public.profiles SET following_count = following_count + 1 WHERE id = NEW.follower_id;
+        END IF;
+
+    -- 2. Handle ACCEPTING a pending request (The status changes)
+    ELSIF (TG_OP = 'UPDATE') THEN
+        IF (OLD.status = 'pending' AND NEW.status = 'accepted') THEN
+            UPDATE public.profiles SET followers_count = followers_count + 1 WHERE id = NEW.following_id;
+            UPDATE public.profiles SET following_count = following_count + 1 WHERE id = NEW.follower_id;
+        END IF;
+
+    -- 3. Handle UNFOLLOWING or REJECTING
+    ELSIF (TG_OP = 'DELETE') THEN
+        -- Only decrement if the follow was actually accepted/active
+        IF (OLD.status = 'accepted') THEN
+            UPDATE public.profiles SET followers_count = followers_count - 1 WHERE id = OLD.following_id;
+            UPDATE public.profiles SET following_count = following_count - 1 WHERE id = OLD.follower_id;
+        END IF;
+    END IF;
+    
+    RETURN NULL; -- AFTER triggers can return NULL
+END;
+$$ LANGUAGE plpgsql;
+-- +migrate StatementEnd
+
+-- Attach to all three actions!
+CREATE TRIGGER tr_sync_follow_counts
+    AFTER INSERT OR UPDATE OR DELETE ON public.follows
+    FOR EACH ROW
+    EXECUTE FUNCTION public.fn_on_follow_sync();
+
 -- +migrate Down
 DROP TABLE IF EXISTS public.follows;
