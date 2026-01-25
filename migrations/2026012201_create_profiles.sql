@@ -1,7 +1,7 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    username text,
+    username text UNIQUE,
     display_name text,
     bio text,
     location text,

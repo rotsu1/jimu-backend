@@ -8,7 +8,7 @@ import (
 
 type Profile struct {
 	ID               uuid.UUID  `json:"id" db:"id"`
-	Username         string     `json:"username" db:"username"`
+	Username         *string    `json:"username" db:"username"`
 	DisplayName      *string    `json:"display_name" db:"display_name"`
 	Bio              *string    `json:"bio" db:"bio"`
 	Location         *string    `json:"location" db:"location"`
