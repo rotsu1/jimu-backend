@@ -76,10 +76,10 @@ const getProfileByIDQuery = `
 
 			FROM public.profiles p
 			-- Check if the viewer is following the target
-			LEFT JOIN public.follows f 
+			LEFT JOIN public.follows f
 			ON f.following_id = p.id AND f.follower_id = $1
 			-- Check if the target is not blocked (either the target blocked the viewer or the viewer blocked the target)
-			LEFT JOIN public.blocks b 
+			LEFT JOIN public.blocked_users b 
 			ON (b.blocker_id = p.id AND b.blocked_id = $1) 
 			OR (b.blocker_id = $1 AND b.blocked_id = p.id)
 
@@ -89,6 +89,26 @@ const getProfileByIDQuery = `
 `
 
 const deleteProfileByIDQuery = `
+
 			DELETE FROM public.profiles
 			WHERE id = $1
+`
+
+const getUserSettingsByIDQuery = `
+			SELECT 
+			user_id,
+			notify_new_follower,
+			notify_likes,
+			notify_comments,
+			sound_enabled,
+			sound_effect_name,
+			default_timer_seconds,
+			auto_fill_previous_values,
+			unit_weight,
+			unit_distance,
+			unit_length,
+			created_at,
+			updated_at
+			FROM public.user_settings
+			WHERE user_id = $1
 `
