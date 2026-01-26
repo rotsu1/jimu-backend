@@ -15,3 +15,9 @@ type RoutineSet struct {
 	CreatedAt         time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 }
+
+type UpdateRoutineSetRequest struct {
+	Weight     *float64 `json:"weight" db:"weight"`
+	Reps       *int     `json:"reps" db:"reps"`
+	OrderIndex *int     `json:"order_index" db:"order_index"`
+}
