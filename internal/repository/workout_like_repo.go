@@ -22,7 +22,7 @@ func NewWorkoutLikeRepository(db *pgxpool.Pool) *WorkoutLikeRepository {
 }
 
 // Like adds a like to a workout. Idempotent operation.
-func (r *WorkoutLikeRepository) Like(
+func (r *WorkoutLikeRepository) LikeWorkout(
 	ctx context.Context,
 	userID uuid.UUID,
 	workoutID uuid.UUID,
@@ -38,7 +38,7 @@ func (r *WorkoutLikeRepository) Like(
 		// ON CONFLICT DO NOTHING returns no rows, so we need to handle this
 		if errors.Is(err, pgx.ErrNoRows) {
 			// 1. Try to fetch the existing like
-			existingLike, getErr := r.GetLikeByID(ctx, userID, workoutID)
+			existingLike, getErr := r.GetWorkoutLikeByID(ctx, userID, workoutID)
 			if getErr != nil {
 				if errors.Is(getErr, ErrWorkoutLikeNotFound) {
 					// 2. If GetLike also returns nothing, it means either:
@@ -57,7 +57,7 @@ func (r *WorkoutLikeRepository) Like(
 }
 
 // Unlike removes a like from a workout.
-func (r *WorkoutLikeRepository) Unlike(
+func (r *WorkoutLikeRepository) UnlikeWorkout(
 	ctx context.Context,
 	userID uuid.UUID,
 	workoutID uuid.UUID,
@@ -75,7 +75,7 @@ func (r *WorkoutLikeRepository) Unlike(
 }
 
 // GetLike gets a specific like.
-func (r *WorkoutLikeRepository) GetLikeByID(
+func (r *WorkoutLikeRepository) GetWorkoutLikeByID(
 	ctx context.Context,
 	userID uuid.UUID,
 	workoutID uuid.UUID,
@@ -98,7 +98,7 @@ func (r *WorkoutLikeRepository) GetLikeByID(
 }
 
 // GetLikesByWorkoutID gets all likes for a workout.
-func (r *WorkoutLikeRepository) GetLikesByWorkoutID(
+func (r *WorkoutLikeRepository) GetWorkoutLikesByWorkoutID(
 	ctx context.Context,
 	workoutID uuid.UUID,
 	viewerID uuid.UUID,
@@ -139,7 +139,7 @@ func (r *WorkoutLikeRepository) GetLikesByWorkoutID(
 }
 
 // IsLiked checks if a user has liked a workout.
-func (r *WorkoutLikeRepository) IsLiked(
+func (r *WorkoutLikeRepository) IsWorkoutLiked(
 	ctx context.Context,
 	userID uuid.UUID,
 	workoutID uuid.UUID,
