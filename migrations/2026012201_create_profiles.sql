@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     last_worked_out_at timestamp with time zone,
     total_workouts integer DEFAULT 0,
     current_streak integer DEFAULT 0,
-    total_weight integer DEFAULT 0,
+    total_weight numeric DEFAULT 0,
     followers_count integer DEFAULT 0,
     following_count integer DEFAULT 0,
     updated_at timestamp with time zone DEFAULT now(),

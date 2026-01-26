@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -59,7 +60,7 @@ func TestCreateWorkout(t *testing.T) {
 	}
 
 	var workoutCount int
-	var totalWeight int
+	var totalWeight float64
 	err = db.QueryRow(
 		ctx,
 		"SELECT total_workouts, total_weight FROM public.profiles WHERE id = $1",
@@ -71,8 +72,8 @@ func TestCreateWorkout(t *testing.T) {
 	if workoutCount != 1 {
 		t.Errorf("Expected 1 workout, got %d", workoutCount)
 	}
-	if totalWeight != expectedTotalWeight {
-		t.Errorf("TotalWeight should be %d: got %v", expectedTotalWeight, totalWeight)
+	if math.Abs(totalWeight-float64(expectedTotalWeight)) > 0.0001 {
+		t.Errorf("TotalWeight should be %f: got %f", float64(expectedTotalWeight), totalWeight)
 	}
 }
 
@@ -514,7 +515,7 @@ func TestDeleteWorkout(t *testing.T) {
 	}
 
 	var workoutCount int
-	var totalWeight int
+	var totalWeight float64
 	err = db.QueryRow(
 		ctx,
 		"SELECT total_workouts, total_weight FROM public.profiles WHERE id = $1",
@@ -526,8 +527,8 @@ func TestDeleteWorkout(t *testing.T) {
 	if workoutCount != 0 {
 		t.Errorf("Expected 0 workouts, got %d", workoutCount)
 	}
-	if totalWeight != profileTotalWeight {
-		t.Errorf("TotalWeight should be %d: got %v", profileTotalWeight, totalWeight)
+	if math.Abs(totalWeight-float64(profileTotalWeight)) > 0.0001 {
+		t.Errorf("TotalWeight should be %f: got %f", float64(profileTotalWeight), totalWeight)
 	}
 }
 

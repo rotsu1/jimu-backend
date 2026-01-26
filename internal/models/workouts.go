@@ -14,7 +14,7 @@ type Workout struct {
 	StartedAt       time.Time `json:"started_at" db:"started_at"`
 	EndedAt         time.Time `json:"ended_at,omitempty" db:"ended_at"`
 	DurationSeconds int       `json:"duration_seconds,omitempty" db:"duration_seconds"`
-	TotalWeight     int       `json:"total_weight,omitempty" db:"total_weight"`
+	TotalWeight     float64   `json:"total_weight,omitempty" db:"total_weight"`
 	LikesCount      int       `json:"likes_count" db:"likes_count"`
 	CommentsCount   int       `json:"comments_count" db:"comments_count"`
 	CreatedAt       time.Time `json:"created_at" db:"created_at"`

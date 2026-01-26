@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.workouts (
     started_at timestamp with time zone NOT NULL,
     ended_at timestamp with time zone NOT NULL,
     duration_seconds integer DEFAULT 0 NOT NULL,
-    total_weight integer DEFAULT 0 NOT NULL,
+    total_weight numeric DEFAULT 0 NOT NULL,
     likes_count integer DEFAULT 0 NOT NULL,
     comments_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
