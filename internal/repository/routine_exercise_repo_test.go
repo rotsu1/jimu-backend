@@ -20,7 +20,7 @@ func TestCreateRoutineExercise(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Push Day")
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Bench Press", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Bench Press", nil, nil)
 
 	orderIndex := 1
 	restTimer := 90
@@ -61,7 +61,7 @@ func TestGetRoutineExerciseByID(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Pull Day")
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Row", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Row", nil, nil)
 
 	// Updated: pass userID
 	created, _ := reRepo.CreateRoutineExercise(
@@ -106,8 +106,8 @@ func TestGetRoutineExercisesByRoutineID(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Leg Day")
-	exercise1, _ := exerciseRepo.Create(ctx, userID, "Squat", nil, nil)
-	exercise2, _ := exerciseRepo.Create(ctx, userID, "Leg Press", nil, nil)
+	exercise1, _ := exerciseRepo.CreateExercise(ctx, userID, "Squat", nil, nil)
+	exercise2, _ := exerciseRepo.CreateExercise(ctx, userID, "Leg Press", nil, nil)
 
 	order1 := 2
 	order2 := 1
@@ -140,7 +140,7 @@ func TestUpdateRoutineExercise(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Chest Day")
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Incline Press", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Incline Press", nil, nil)
 
 	// Updated: pass userID
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
@@ -195,7 +195,7 @@ func TestDeleteRoutineExercise(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Back Day")
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Pullup", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Pullup", nil, nil)
 
 	// Updated: pass userID
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)

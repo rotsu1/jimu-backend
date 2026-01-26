@@ -29,7 +29,7 @@ func TestCreateWorkoutExercise(t *testing.T) {
 		t.Fatalf("Failed to create workout: %v", err)
 	}
 
-	exercise, err := exerciseRepo.Create(ctx, userID, "Bench Press", nil, nil)
+	exercise, err := exerciseRepo.CreateExercise(ctx, userID, "Bench Press", nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to create exercise: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestCreateWorkoutExerciseNotFoundWorkout(t *testing.T) {
 	ctx := context.Background()
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Bench Press", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Bench Press", nil, nil)
 	_, err := weRepo.CreateWorkoutExercise(ctx, uuid.New(), exercise.ID, nil, nil, nil, userID)
 	if !errors.Is(err, ErrReferenceViolation) {
 		t.Errorf("Expected ErrReferenceViolation, but got %v", err)
@@ -83,7 +83,7 @@ func TestGetWorkoutExerciseByID(t *testing.T) {
 	}
 
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Squat", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Squat", nil, nil)
 
 	created, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 	if err != nil {
@@ -126,8 +126,8 @@ func TestGetWorkoutExercisesByWorkoutID(t *testing.T) {
 	}
 
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
-	exercise1, _ := exerciseRepo.Create(ctx, userID, "Bench Press", nil, nil)
-	exercise2, _ := exerciseRepo.Create(ctx, userID, "Squat", nil, nil)
+	exercise1, _ := exerciseRepo.CreateExercise(ctx, userID, "Bench Press", nil, nil)
+	exercise2, _ := exerciseRepo.CreateExercise(ctx, userID, "Squat", nil, nil)
 
 	order1 := 2
 	order2 := 1
@@ -159,7 +159,7 @@ func TestUpdateWorkoutExercise(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Deadlift", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Deadlift", nil, nil)
 
 	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 
@@ -207,7 +207,7 @@ func TestDeleteWorkoutExercise(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Press", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Press", nil, nil)
 
 	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 	weID := we.ID
@@ -247,7 +247,7 @@ func TestDeleteWorkoutExerciseOnDeleteWorkout(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
-	exercise, _ := exerciseRepo.Create(ctx, userID, "Press", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Press", nil, nil)
 	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 
 	err := workoutRepo.DeleteWorkout(ctx, workout.ID, userID)
