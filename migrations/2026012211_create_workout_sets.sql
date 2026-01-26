@@ -40,12 +40,6 @@ BEGIN
     SET total_weight = total_weight + weight_diff
     WHERE id = target_workout_id;
 
-    -- 4. Update the profile total simultaneously!
-    -- This keeps everything in sync in one single transaction
-    UPDATE public.profiles
-    SET total_weight = total_weight + weight_diff
-    WHERE id = (SELECT user_id FROM public.workouts WHERE id = target_workout_id);
-
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;

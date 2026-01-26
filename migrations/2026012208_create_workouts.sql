@@ -4,12 +4,12 @@ CREATE TABLE IF NOT EXISTS public.workouts (
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     name text,
     comment text,
-    started_at timestamp with time zone DEFAULT now(),
-    ended_at timestamp with time zone,
-    duration_seconds integer,
-    total_weight integer,
-    likes_count integer DEFAULT 0,
-    comments_count integer DEFAULT 0,
+    started_at timestamp with time zone NOT NULL,
+    ended_at timestamp with time zone NOT NULL,
+    duration_seconds integer DEFAULT 0 NOT NULL,
+    total_weight integer DEFAULT 0 NOT NULL,
+    likes_count integer DEFAULT 0 NOT NULL,
+    comments_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
@@ -55,6 +55,14 @@ BEGIN
             last_worked_out_at = NEW.started_at
         WHERE id = NEW.user_id;
 
+    ELSIF (TG_OP = 'UPDATE') THEN
+        -- Only update profile if the weight actually changed
+        IF NEW.total_weight <> OLD.total_weight THEN
+            UPDATE public.profiles
+            SET total_weight = total_weight - OLD.total_weight + NEW.total_weight
+            WHERE id = NEW.user_id;
+        END IF;
+
     ELSIF (TG_OP = 'DELETE') THEN
         UPDATE public.profiles
         SET 
@@ -71,7 +79,7 @@ $$ LANGUAGE plpgsql;
 
 -- Attach to workouts
 CREATE TRIGGER tr_sync_profile_stats
-AFTER INSERT OR DELETE ON public.workouts
+AFTER INSERT OR UPDATE OR DELETE ON public.workouts
 FOR EACH ROW EXECUTE FUNCTION handle_profile_stats_sync();
 
 -- +migrate Down
