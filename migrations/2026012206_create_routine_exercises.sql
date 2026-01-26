@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.routine_exercises (
     exercise_id uuid REFERENCES public.exercises(id),
     order_index integer,
     rest_timer_seconds integer,
-    note text,
+    memo text,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );

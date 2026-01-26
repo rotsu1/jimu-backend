@@ -12,7 +12,13 @@ type RoutineExercise struct {
 	ExerciseID       uuid.UUID `json:"exercise_id" db:"exercise_id"`
 	OrderIndex       *int      `json:"order_index,omitempty" db:"order_index"`
 	RestTimerSeconds *int      `json:"rest_timer_seconds,omitempty" db:"rest_timer_seconds"`
-	Note             *string   `json:"note,omitempty" db:"note"`
+	Memo             *string   `json:"memo,omitempty" db:"memo"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
+}
+
+type UpdateRoutineExerciseRequest struct {
+	OrderIndex       *int    `json:"order_index" db:"order_index"`
+	RestTimerSeconds *int    `json:"rest_timer_seconds" db:"rest_timer_seconds"`
+	Memo             *string `json:"memo" db:"memo"`
 }
