@@ -171,20 +171,12 @@ func (r *WorkoutRepository) UpdateWorkout(
 	}
 	if updates.EndedAt != nil {
 		sets = append(sets, fmt.Sprintf("ended_at = $%d", i))
-		if updates.EndedAt.IsZero() {
-			args = append(args, nil)
-		} else {
-			args = append(args, *updates.EndedAt)
-		}
+		args = append(args, *updates.EndedAt)
 		i++
 	}
 	if updates.DurationSeconds != nil {
 		sets = append(sets, fmt.Sprintf("duration_seconds = $%d", i))
-		if *updates.DurationSeconds == 0 {
-			args = append(args, nil)
-		} else {
-			args = append(args, *updates.DurationSeconds)
-		}
+		args = append(args, *updates.DurationSeconds)
 		i++
 	}
 
