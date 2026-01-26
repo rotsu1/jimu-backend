@@ -21,7 +21,7 @@ func TestCreateRoutineSet(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Push Day")
-	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Bench Press", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Bench Press", nil, nil, userID)
 	// Updated: pass userID
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
 
@@ -57,7 +57,7 @@ func TestGetRoutineSetByID(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Pull Day")
-	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Row", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Row", nil, nil, userID)
 	// Updated: pass userID
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
 
@@ -97,7 +97,7 @@ func TestGetRoutineSetsByRoutineExerciseID(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Leg Day")
-	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Squat", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Squat", nil, nil, userID)
 	// Updated: pass userID
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
 
@@ -133,7 +133,7 @@ func TestUpdateRoutineSet(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Arm Day")
-	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Curl", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Curl", nil, nil, userID)
 	// Updated: pass userID
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
 
@@ -186,7 +186,7 @@ func TestDeleteRoutineSet(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Full Body")
-	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Deadlift", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Deadlift", nil, nil, userID)
 	// Updated: pass userID
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
 
@@ -231,7 +231,7 @@ func TestDeleteRoutineSetOnDeleteRoutineExercise(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Leg Day")
-	exercise, _ := exerciseRepo.CreateExercise(ctx, userID, "Squat", nil, nil)
+	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Squat", nil, nil, userID)
 	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
 
 	rs, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, nil, userID)
