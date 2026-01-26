@@ -16,3 +16,9 @@ type WorkoutExercise struct {
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
 }
+
+type UpdateWorkoutExerciseRequest struct {
+	OrderIndex       *int    `json:"order_index" db:"order_index"`
+	Memo             *string `json:"memo" db:"memo"`
+	RestTimerSeconds *int    `json:"rest_timer_seconds" db:"rest_timer_seconds"`
+}
