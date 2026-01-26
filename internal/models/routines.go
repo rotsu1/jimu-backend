@@ -13,3 +13,7 @@ type Routine struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
+
+type UpdateRoutineRequest struct {
+	Name *string `json:"name" db:"name"`
+}
