@@ -280,3 +280,32 @@ func TestGetLikesByWorkoutIDBlockedUser(t *testing.T) {
 		t.Errorf("Expected 0 likes, got %d", len(likes))
 	}
 }
+
+func TestLikeDeleteOnCascadeWorkout(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	likeRepo := NewWorkoutLikeRepository(db)
+	workoutRepo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
+	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
+
+	_, err := likeRepo.Like(ctx, userID, workout.ID)
+	if err != nil {
+		t.Fatalf("Failed to like: %v", err)
+	}
+
+	err = workoutRepo.DeleteWorkout(ctx, workout.ID)
+	if err != nil {
+		t.Fatalf("Failed to delete workout: %v", err)
+	}
+
+	likes, err := likeRepo.GetLikesByWorkoutID(ctx, workout.ID, userID, 10, 0)
+	if err != nil {
+		t.Fatalf("Failed to get likes: %v", err)
+	}
+	if len(likes) != 0 {
+		t.Errorf("Expected 0 likes, got %d", len(likes))
+	}
+}
