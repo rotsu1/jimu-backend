@@ -23,7 +23,7 @@ func NewWorkoutSetRepository(db *pgxpool.Pool) *WorkoutSetRepository {
 	}
 }
 
-func (r *WorkoutSetRepository) Create(
+func (r *WorkoutSetRepository) CreateWorkoutSet(
 	ctx context.Context,
 	workoutExerciseID uuid.UUID,
 	weight *float64,
@@ -76,7 +76,7 @@ func (r *WorkoutSetRepository) Create(
 	return &ws, nil
 }
 
-func (r *WorkoutSetRepository) GetByID(
+func (r *WorkoutSetRepository) GetWorkoutSetByID(
 	ctx context.Context,
 	id uuid.UUID,
 ) (*models.WorkoutSet, error) {
@@ -102,7 +102,7 @@ func (r *WorkoutSetRepository) GetByID(
 	return &ws, nil
 }
 
-func (r *WorkoutSetRepository) GetByWorkoutExerciseID(
+func (r *WorkoutSetRepository) GetWorkoutSetsByWorkoutExerciseID(
 	ctx context.Context,
 	workoutExerciseID uuid.UUID,
 ) ([]*models.WorkoutSet, error) {
@@ -134,7 +134,7 @@ func (r *WorkoutSetRepository) GetByWorkoutExerciseID(
 	return sets, nil
 }
 
-func (r *WorkoutSetRepository) Update(
+func (r *WorkoutSetRepository) UpdateWorkoutSet(
 	ctx context.Context,
 	workoutSetID uuid.UUID,
 	userID uuid.UUID,
@@ -223,7 +223,7 @@ func (r *WorkoutSetRepository) Update(
 	return nil
 }
 
-func (r *WorkoutSetRepository) Delete(ctx context.Context, workoutSetID uuid.UUID, userID uuid.UUID) error {
+func (r *WorkoutSetRepository) DeleteWorkoutSet(ctx context.Context, workoutSetID uuid.UUID, userID uuid.UUID) error {
 	commandTag, err := r.DB.Exec(ctx, deleteWorkoutSetByIDQuery, workoutSetID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete workout set: %w", err)

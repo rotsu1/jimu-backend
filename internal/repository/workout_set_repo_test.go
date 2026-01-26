@@ -24,13 +24,13 @@ func TestCreateWorkoutSet(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.Create(ctx, userID, "Bench Press", nil, nil)
-	we, _ := weRepo.Create(ctx, workout.ID, exercise.ID, nil, nil, nil)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 
 	weight := 100.0
 	reps := 10
 	orderIndex := 1
 
-	ws, err := wsRepo.Create(ctx, we.ID, &weight, &reps, false, &orderIndex, userID)
+	ws, err := wsRepo.CreateWorkoutSet(ctx, we.ID, &weight, &reps, false, &orderIndex, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout set: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestCreateWorkoutSetNotFoundWorkoutExercise(t *testing.T) {
 	ctx := context.Background()
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
-	_, err := wsRepo.Create(ctx, uuid.New(), nil, nil, false, nil, userID)
+	_, err := wsRepo.CreateWorkoutSet(ctx, uuid.New(), nil, nil, false, nil, userID)
 	if err == nil {
 		t.Errorf("Expected error, but got nil")
 	}
@@ -79,11 +79,11 @@ func TestCreateWorkoutSetSyncWorkoutStatus(t *testing.T) {
 	reps := 20
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.Create(ctx, userID, "Bench Press", nil, nil)
-	we, err := weRepo.Create(ctx, workout.ID, exercise.ID, nil, nil, nil)
+	we, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout exercise: %v", err)
 	}
-	_, err = wsRepo.Create(ctx, we.ID, &weight, &reps, false, nil, userID)
+	_, err = wsRepo.CreateWorkoutSet(ctx, we.ID, &weight, &reps, false, nil, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout set: %v", err)
 	}
@@ -109,11 +109,11 @@ func TestGetWorkoutSetByID(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.Create(ctx, userID, "Squat", nil, nil)
-	we, _ := weRepo.Create(ctx, workout.ID, exercise.ID, nil, nil, nil)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 
-	created, _ := wsRepo.Create(ctx, we.ID, nil, nil, false, nil, userID)
+	created, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, nil, userID)
 
-	ws, err := wsRepo.GetByID(ctx, created.ID)
+	ws, err := wsRepo.GetWorkoutSetByID(ctx, created.ID)
 	if err != nil {
 		t.Fatalf("Failed to get workout set: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestGetWorkoutSetByIDNotFound(t *testing.T) {
 	wsRepo := NewWorkoutSetRepository(db)
 	ctx := context.Background()
 
-	_, err := wsRepo.GetByID(ctx, uuid.New())
+	_, err := wsRepo.GetWorkoutSetByID(ctx, uuid.New())
 	if !errors.Is(err, ErrWorkoutSetNotFound) {
 		t.Errorf("Expected ErrWorkoutSetNotFound, but got %v", err)
 	}
@@ -147,14 +147,14 @@ func TestGetWorkoutSetsByWorkoutExerciseID(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.Create(ctx, userID, "Deadlift", nil, nil)
-	we, _ := weRepo.Create(ctx, workout.ID, exercise.ID, nil, nil, nil)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 
 	order1 := 2
 	order2 := 1
-	wsRepo.Create(ctx, we.ID, nil, nil, false, &order1, userID)
-	wsRepo.Create(ctx, we.ID, nil, nil, true, &order2, userID)
+	wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, &order1, userID)
+	wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, true, &order2, userID)
 
-	sets, err := wsRepo.GetByWorkoutExerciseID(ctx, we.ID)
+	sets, err := wsRepo.GetWorkoutSetsByWorkoutExerciseID(ctx, we.ID)
 	if err != nil {
 		t.Fatalf("Failed to get workout sets: %v", err)
 	}
@@ -181,14 +181,14 @@ func TestUpdateWorkoutSet(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.Create(ctx, userID, "OHP", nil, nil)
-	we, _ := weRepo.Create(ctx, workout.ID, exercise.ID, nil, nil, nil)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 
-	ws, _ := wsRepo.Create(ctx, we.ID, nil, nil, false, nil, userID)
+	ws, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, nil, userID)
 
 	newWeight := 50.0
 	newReps := 8
 	isCompleted := true
-	err := wsRepo.Update(ctx, ws.ID, userID, models.UpdateWorkoutSetRequest{
+	err := wsRepo.UpdateWorkoutSet(ctx, ws.ID, userID, models.UpdateWorkoutSetRequest{
 		Weight:      &newWeight,
 		Reps:        &newReps,
 		IsCompleted: &isCompleted,
@@ -197,7 +197,7 @@ func TestUpdateWorkoutSet(t *testing.T) {
 		t.Fatalf("Failed to update workout set: %v", err)
 	}
 
-	updated, _ := wsRepo.GetByID(ctx, ws.ID)
+	updated, _ := wsRepo.GetWorkoutSetByID(ctx, ws.ID)
 	if *updated.Weight != newWeight {
 		t.Errorf("Weight was not updated: got %v, want %v", *updated.Weight, newWeight)
 	}
@@ -216,7 +216,7 @@ func TestUpdateWorkoutSetNotFound(t *testing.T) {
 	ctx := context.Background()
 
 	weight := 100.0
-	err := wsRepo.Update(ctx, uuid.New(), uuid.New(), models.UpdateWorkoutSetRequest{Weight: &weight})
+	err := wsRepo.UpdateWorkoutSet(ctx, uuid.New(), uuid.New(), models.UpdateWorkoutSetRequest{Weight: &weight})
 	if !errors.Is(err, ErrWorkoutSetNotFound) {
 		t.Errorf("Expected ErrWorkoutSetNotFound, but got %v", err)
 	}
@@ -234,17 +234,17 @@ func TestDeleteWorkoutSet(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.Create(ctx, userID, "Row", nil, nil)
-	we, _ := weRepo.Create(ctx, workout.ID, exercise.ID, nil, nil, nil)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
 
-	ws, _ := wsRepo.Create(ctx, we.ID, nil, nil, false, nil, userID)
+	ws, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, nil, userID)
 	wsID := ws.ID
 
-	err := wsRepo.Delete(ctx, wsID, userID)
+	err := wsRepo.DeleteWorkoutSet(ctx, wsID, userID)
 	if err != nil {
 		t.Fatalf("Failed to delete workout set: %v", err)
 	}
 
-	_, err = wsRepo.GetByID(ctx, wsID)
+	_, err = wsRepo.GetWorkoutSetByID(ctx, wsID)
 	if !errors.Is(err, ErrWorkoutSetNotFound) {
 		t.Errorf("Expected ErrWorkoutSetNotFound, but got %v", err)
 	}
@@ -256,7 +256,7 @@ func TestDeleteWorkoutSetNotFound(t *testing.T) {
 	wsRepo := NewWorkoutSetRepository(db)
 	ctx := context.Background()
 
-	err := wsRepo.Delete(ctx, uuid.New(), uuid.New())
+	err := wsRepo.DeleteWorkoutSet(ctx, uuid.New(), uuid.New())
 	if !errors.Is(err, ErrWorkoutSetNotFound) {
 		t.Errorf("Expected ErrWorkoutSetNotFound, but got %v", err)
 	}
