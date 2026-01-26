@@ -296,7 +296,7 @@ func TestLikeDeleteOnCascadeWorkout(t *testing.T) {
 		t.Fatalf("Failed to like: %v", err)
 	}
 
-	err = workoutRepo.DeleteWorkout(ctx, workout.ID)
+	err = workoutRepo.DeleteWorkout(ctx, workout.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to delete workout: %v", err)
 	}

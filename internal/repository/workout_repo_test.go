@@ -501,7 +501,7 @@ func TestDeleteWorkout(t *testing.T) {
 		t.Fatalf("Failed to update workout: %v", err)
 	}
 
-	err = repo.DeleteWorkout(ctx, workoutID)
+	err = repo.DeleteWorkout(ctx, workoutID, userID)
 	if err != nil {
 		t.Fatalf("Failed to delete workout: %v", err)
 	}
@@ -538,7 +538,12 @@ func TestDeleteWorkoutNotFound(t *testing.T) {
 	repo := NewWorkoutRepository(db)
 	ctx := context.Background()
 
-	err := repo.DeleteWorkout(ctx, uuid.New())
+	userID, _, err := testutil.InsertProfile(ctx, db, "testuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	err = repo.DeleteWorkout(ctx, uuid.New(), userID)
 	if err == nil {
 		t.Error("Expected error when workout is not found, but got nil")
 	}

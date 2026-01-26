@@ -203,8 +203,12 @@ func (r *WorkoutRepository) UpdateWorkout(
 	return nil
 }
 
-func (r *WorkoutRepository) DeleteWorkout(ctx context.Context, id uuid.UUID) error {
-	commandTag, err := r.DB.Exec(ctx, deleteWorkoutByIDQuery, id)
+func (r *WorkoutRepository) DeleteWorkout(
+	ctx context.Context,
+	id uuid.UUID,
+	userID uuid.UUID,
+) error {
+	commandTag, err := r.DB.Exec(ctx, deleteWorkoutByIDQuery, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete workout: %w", err)
 	}

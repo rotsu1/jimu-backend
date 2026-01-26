@@ -219,7 +219,7 @@ func TestCommentCascadeOnWorkoutDelete(t *testing.T) {
 
 	commentRepo.CreateComment(ctx, userID, workout.ID, nil, "Test comment")
 
-	err := workoutRepo.DeleteWorkout(ctx, workout.ID)
+	err := workoutRepo.DeleteWorkout(ctx, workout.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to delete workout: %v", err)
 	}

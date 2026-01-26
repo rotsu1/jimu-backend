@@ -1,11 +1,5 @@
 package repository
 
-const insertWorkoutQuery = `
-	INSERT INTO public.workouts (user_id, name, comment, started_at, ended_at, duration_seconds)
-	VALUES ($1, $2, $3, $4, $5, $6)
-	RETURNING id, user_id, name, comment, started_at, ended_at, duration_seconds, total_weight, likes_count, comments_count, created_at, updated_at
-`
-
 const getWorkoutByIDQuery = `
   SELECT 
     w.id, w.user_id, w.name, w.comment, w.started_at, w.ended_at, 
@@ -62,7 +56,17 @@ const getWorkoutsByUserIDQuery = `
   LIMIT $3 OFFSET $4
 `
 
+const insertWorkoutQuery = `
+	INSERT INTO public.workouts (user_id, name, comment, started_at, ended_at, duration_seconds)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	RETURNING id, user_id, name, comment, started_at, ended_at, duration_seconds, total_weight, likes_count, comments_count, created_at, updated_at
+`
+
 const deleteWorkoutByIDQuery = `
-	DELETE FROM public.workouts
-	WHERE id = $1
+  DELETE FROM public.workouts
+  WHERE id = $1
+  AND (
+      user_id = $2 
+      OR EXISTS (SELECT 1 FROM public.sys_admins WHERE user_id = $2)
+  )
 `
