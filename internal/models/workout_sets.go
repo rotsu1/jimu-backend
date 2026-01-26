@@ -16,3 +16,10 @@ type WorkoutSet struct {
 	CreatedAt         time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 }
+
+type UpdateWorkoutSetRequest struct {
+	Weight      *float64 `json:"weight" db:"weight"`
+	Reps        *int     `json:"reps" db:"reps"`
+	IsCompleted *bool    `json:"is_completed" db:"is_completed"`
+	OrderIndex  *int     `json:"order_index" db:"order_index"`
+}
