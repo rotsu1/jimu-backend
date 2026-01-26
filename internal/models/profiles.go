@@ -19,7 +19,7 @@ type Profile struct {
 	LastWorkedOutAt  *time.Time `json:"last_worked_out_at" db:"last_worked_out_at"`
 	TotalWorkouts    int        `json:"total_workouts" db:"total_workouts"`
 	CurrentStreak    int        `json:"current_streak" db:"current_streak"`
-	TotalWeight      int        `json:"total_weight" db:"total_weight"`
+	TotalWeight      float64    `json:"total_weight" db:"total_weight"`
 	FollowersCount   int        `json:"followers_count" db:"followers_count"`
 	FollowingCount   int        `json:"following_count" db:"following_count"`
 	CreatedAt        time.Time  `json:"created_at" db:"created_at"`
