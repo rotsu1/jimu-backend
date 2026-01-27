@@ -66,6 +66,8 @@ const getProfileByIDQuery = `
 					ELSE 0 
 			END AS total_weight,
 
+			p.followers_count,
+			p.following_count,
 			p.created_at,
 
 			CASE

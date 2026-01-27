@@ -122,7 +122,6 @@ func (r *UserRepository) UpdateProfile(
 	var args []interface{}
 	i := 1
 
-	// 各フィールドのチェック
 	if updates.Username != nil {
 		sets = append(sets, fmt.Sprintf("username = $%d", i))
 
@@ -208,7 +207,7 @@ func (r *UserRepository) UpdateProfile(
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return ErrUsernameTaken // 独自定義したエラーを返す
+			return ErrUsernameTaken
 		}
 		return fmt.Errorf("failed to update profile: %w", err)
 	}
