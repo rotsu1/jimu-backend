@@ -44,7 +44,20 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 func cleanupTables(t *testing.T, db *pgxpool.Pool) {
 	t.Helper()
 
-	const query = `TRUNCATE TABLE public.profiles, public.user_identities RESTART IDENTITY CASCADE`
+	const query = `
+    TRUNCATE TABLE 
+      public.sys_admins,
+      public.profiles, 
+      public.user_identities,
+      public.muscles,
+      public.exercises,
+      public.workouts,
+      public.workout_exercises,
+      public.workout_sets,
+      public.workout_images,
+      public.comment_likes,
+      public.comments
+    RESTART IDENTITY CASCADE`
 
 	_, err := db.Exec(context.Background(), query)
 	if err != nil {
