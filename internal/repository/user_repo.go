@@ -333,9 +333,13 @@ func (r *UserRepository) UpdateUserSettings(
 	)
 	args = append(args, id)
 
-	_, err := r.DB.Exec(ctx, query, args...)
+	res, err := r.DB.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to update user settings: %w", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return ErrNotFound
 	}
 
 	return nil
@@ -376,11 +380,13 @@ func (r *UserRepository) DeleteIdentity(
 	ctx context.Context,
 	userID uuid.UUID,
 	provider string,
-	providerUserID string,
 ) error {
-	_, err := r.DB.Exec(ctx, deleteIdentityQuery, userID, provider, providerUserID)
+	res, err := r.DB.Exec(ctx, deleteIdentityQuery, userID, provider)
 	if err != nil {
 		return fmt.Errorf("failed to delete identity: %w", err)
+	}
+	if res.RowsAffected() == 0 {
+		return ErrNotFound
 	}
 	return nil
 }

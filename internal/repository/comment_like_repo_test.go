@@ -279,7 +279,7 @@ func TestLikeDeleteOnCascadeComment(t *testing.T) {
 		t.Fatalf("Failed to like: %v", err)
 	}
 
-	err = commentRepo.DeleteComment(ctx, comment.ID, userID, workout.ID)
+	err = commentRepo.DeleteComment(ctx, comment.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to delete comment: %v", err)
 	}

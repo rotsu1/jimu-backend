@@ -121,5 +121,4 @@ const deleteCommentByIDQuery = `
   DELETE FROM public.comments
   WHERE id = $1 
   AND user_id = $2
-  AND workout_id = $3
 `

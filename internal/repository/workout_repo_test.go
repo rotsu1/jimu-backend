@@ -337,7 +337,7 @@ func TestUpdateWorkout(t *testing.T) {
 		Name:    &newName,
 		Comment: &comment,
 		EndedAt: &endedAt,
-	})
+	}, userID)
 	if err != nil {
 		t.Fatalf("Failed to update workout: %v", err)
 	}
@@ -367,7 +367,7 @@ func TestUpdateWorkoutNotFound(t *testing.T) {
 	newName := "Test"
 	err := repo.UpdateWorkout(ctx, uuid.New(), models.UpdateWorkoutRequest{
 		Name: &newName,
-	})
+	}, uuid.New())
 	if err == nil {
 		t.Error("Expected error when workout is not found, but got nil")
 	}
@@ -394,7 +394,7 @@ func TestUpdateWorkoutNoChange(t *testing.T) {
 		t.Fatalf("Failed to create workout: %v", err)
 	}
 
-	err = repo.UpdateWorkout(ctx, workout.ID, models.UpdateWorkoutRequest{})
+	err = repo.UpdateWorkout(ctx, workout.ID, models.UpdateWorkoutRequest{}, userID)
 	if err != nil {
 		t.Fatalf("Expected no error for empty update, got: %v", err)
 	}
@@ -432,7 +432,7 @@ func TestUpdateWorkoutZeroToNull(t *testing.T) {
 	err = repo.UpdateWorkout(ctx, workout.ID, models.UpdateWorkoutRequest{
 		Comment:         &comment,
 		DurationSeconds: &duration,
-	})
+	}, userID)
 	if err != nil {
 		t.Fatalf("Failed to update workout: %v", err)
 	}
@@ -443,7 +443,7 @@ func TestUpdateWorkoutZeroToNull(t *testing.T) {
 	err = repo.UpdateWorkout(ctx, workout.ID, models.UpdateWorkoutRequest{
 		Comment:         &emptyComment,
 		DurationSeconds: &zeroDuration,
-	})
+	}, userID)
 	if err != nil {
 		t.Fatalf("Failed to update workout: %v", err)
 	}

@@ -16,8 +16,7 @@ const getIdentitiesByUserIDQuery = `
 const deleteIdentityQuery = `
 			DELETE FROM user_identities 
 			WHERE user_id = $1 
-			AND provider_name = $2 
-			AND provider_user_id = $3
+			AND provider_name = $2
 `
 
 const insertUserIdentityQuery = `

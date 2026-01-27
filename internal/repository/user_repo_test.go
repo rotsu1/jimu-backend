@@ -605,7 +605,7 @@ func TestDeleteIdentity(t *testing.T) {
 	}
 
 	// 3. Delete the identity
-	err = repo.DeleteIdentity(ctx, profile.ID, "google", googleID)
+	err = repo.DeleteIdentity(ctx, profile.ID, "google")
 	if err != nil {
 		t.Fatalf("Failed to delete identity: %v", err)
 	}

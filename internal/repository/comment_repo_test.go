@@ -184,7 +184,7 @@ func TestDeleteComment(t *testing.T) {
 	comment, _ := commentRepo.CreateComment(ctx, userID, workout.ID, nil, "To be deleted")
 	commentID := comment.ID
 
-	err := commentRepo.DeleteComment(ctx, commentID, userID, workout.ID)
+	err := commentRepo.DeleteComment(ctx, commentID, userID)
 	if err != nil {
 		t.Fatalf("Failed to delete comment: %v", err)
 	}
@@ -201,7 +201,7 @@ func TestDeleteCommentNotFound(t *testing.T) {
 	commentRepo := NewCommentRepository(db)
 	ctx := context.Background()
 
-	err := commentRepo.DeleteComment(ctx, uuid.New(), uuid.New(), uuid.New())
+	err := commentRepo.DeleteComment(ctx, uuid.New(), uuid.New())
 	if !errors.Is(err, ErrCommentNotFound) {
 		t.Errorf("Expected ErrCommentNotFound, but got %v", err)
 	}

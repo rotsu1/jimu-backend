@@ -155,9 +155,8 @@ func (r *CommentRepository) DeleteComment(
 	ctx context.Context,
 	id uuid.UUID,
 	userID uuid.UUID,
-	workoutID uuid.UUID,
 ) error {
-	commandTag, err := r.DB.Exec(ctx, deleteCommentByIDQuery, id, userID, workoutID)
+	commandTag, err := r.DB.Exec(ctx, deleteCommentByIDQuery, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete comment: %w", err)
 	}

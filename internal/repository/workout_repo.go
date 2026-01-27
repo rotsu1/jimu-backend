@@ -146,6 +146,7 @@ func (r *WorkoutRepository) UpdateWorkout(
 	ctx context.Context,
 	id uuid.UUID,
 	updates models.UpdateWorkoutRequest,
+	userID uuid.UUID,
 ) error {
 	var sets []string
 	var args []interface{}
@@ -185,11 +186,13 @@ func (r *WorkoutRepository) UpdateWorkout(
 	}
 
 	query := fmt.Sprintf(
-		"UPDATE workouts SET %s WHERE id = $%d",
+		"UPDATE workouts SET %s WHERE id = $%d AND (user_id = $%d OR EXISTS (SELECT 1 FROM public.sys_admins WHERE user_id = $%d))",
 		strings.Join(sets, ", "),
 		i,
+		i+1,
+		i+2,
 	)
-	args = append(args, id)
+	args = append(args, id, userID, userID)
 
 	res, err := r.DB.Exec(ctx, query, args...)
 	if err != nil {
