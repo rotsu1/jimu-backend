@@ -23,10 +23,13 @@ import (
 // --- Mocks ---
 
 type mockUserRepo struct {
-	UpsertGoogleUserFunc func(ctx context.Context, googleID, email string) (*models.Profile, error)
-	GetProfileByIDFunc   func(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error)
-	UpdateProfileFunc    func(ctx context.Context, id uuid.UUID, updates models.UpdateProfileRequest) error
-	DeleteProfileFunc    func(ctx context.Context, id uuid.UUID) error
+	// ... fields
+	UpsertGoogleUserFunc      func(ctx context.Context, googleID, email string) (*models.Profile, error)
+	GetProfileByIDFunc        func(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error)
+	UpdateProfileFunc         func(ctx context.Context, id uuid.UUID, updates models.UpdateProfileRequest) error
+	DeleteProfileFunc         func(ctx context.Context, id uuid.UUID) error
+	GetIdentitiesByUserIDFunc func(ctx context.Context, userID uuid.UUID) ([]*models.UserIdentity, error)
+	DeleteIdentityFunc        func(ctx context.Context, userID uuid.UUID, provider string) error
 }
 
 func (m *mockUserRepo) UpsertGoogleUser(ctx context.Context, googleID, email string) (*models.Profile, error) {
@@ -53,6 +56,20 @@ func (m *mockUserRepo) UpdateProfile(ctx context.Context, id uuid.UUID, updates 
 func (m *mockUserRepo) DeleteProfile(ctx context.Context, id uuid.UUID) error {
 	if m.DeleteProfileFunc != nil {
 		return m.DeleteProfileFunc(ctx, id)
+	}
+	return nil
+}
+
+func (m *mockUserRepo) GetIdentitiesByUserID(ctx context.Context, userID uuid.UUID) ([]*models.UserIdentity, error) {
+	if m.GetIdentitiesByUserIDFunc != nil {
+		return m.GetIdentitiesByUserIDFunc(ctx, userID)
+	}
+	return []*models.UserIdentity{}, nil
+}
+
+func (m *mockUserRepo) DeleteIdentity(ctx context.Context, userID uuid.UUID, provider string) error {
+	if m.DeleteIdentityFunc != nil {
+		return m.DeleteIdentityFunc(ctx, userID, provider)
 	}
 	return nil
 }
@@ -516,5 +533,40 @@ func TestDeleteNonExistentProfile(t *testing.T) {
 
 	if rr.Code != http.StatusNotFound {
 		t.Errorf("expected 404 Not Found, got %d", rr.Code)
+	}
+}
+
+func TestGetMyIdentities(t *testing.T) {
+	h := NewAuthHandler(&mockUserRepo{}, &mockSessionRepo{}, &mockValidator{})
+
+	req := httptest.NewRequest("GET", "/auth/identities", nil)
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.GetMyIdentities(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", rr.Code)
+	}
+}
+
+func TestUnlinkIdentity(t *testing.T) {
+	h := NewAuthHandler(&mockUserRepo{}, &mockSessionRepo{}, &mockValidator{})
+
+	body := `{"provider": "google"}`
+	req := httptest.NewRequest("DELETE", "/auth/identities", strings.NewReader(body))
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.UnlinkIdentity(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("expected 204 No Content, got %d", rr.Code)
 	}
 }

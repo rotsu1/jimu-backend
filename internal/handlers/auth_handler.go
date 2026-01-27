@@ -25,6 +25,8 @@ type UserScanner interface {
 	GetProfileByID(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error)
 	UpdateProfile(ctx context.Context, id uuid.UUID, updates models.UpdateProfileRequest) error
 	DeleteProfile(ctx context.Context, id uuid.UUID) error
+	GetIdentitiesByUserID(ctx context.Context, userID uuid.UUID) ([]*models.UserIdentity, error)
+	DeleteIdentity(ctx context.Context, userID uuid.UUID, provider string) error
 }
 
 type SessionScanner interface {
@@ -381,5 +383,78 @@ func (h *AuthHandler) DeleteMyProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Return Success
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) GetMyIdentities(w http.ResponseWriter, r *http.Request) {
+	// 1. Grab the userID from the Context
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Fetch the identities
+	identities, err := h.UserRepo.GetIdentitiesByUserID(r.Context(), userID)
+	if err != nil {
+		log.Printf("Identities fetch error: %v", err)
+		http.Error(w, "Failed to fetch identities", http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Return Success
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(identities)
+}
+
+func (h *AuthHandler) UnlinkIdentity(w http.ResponseWriter, r *http.Request) {
+	// 1. Context Check
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Request Decoding
+	var req struct {
+		Provider string `json:"provider"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.Provider == "" {
+		http.Error(w, "Provider is required", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Repo Call
+	err = h.UserRepo.DeleteIdentity(r.Context(), userID, req.Provider)
+
+	// 4. Error Mapping
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			http.Error(w, "Identity not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Identity unlink error: %v", err)
+		http.Error(w, "Failed to unlink identity", http.StatusInternalServerError)
+		return
+	}
+
+	// 5. Response Construction
 	w.WriteHeader(http.StatusNoContent)
 }
