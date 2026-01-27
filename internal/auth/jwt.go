@@ -7,14 +7,33 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(userId string, secret string) (string, error) {
-	claims := jwt.MapClaims{
+// GenerateTokenPair creates a short-lived access token and a long-lived refresh token.
+func GenerateTokenPair(userId string, secret string) (string, string, error) {
+	// 1. Access Token (15 Minutes)
+	atClaims := jwt.MapClaims{
 		"sub": userId,
-		"exp": time.Now().Add(time.Hour * 72).Unix(),
+		"exp": time.Now().Add(time.Minute * 15).Unix(),
 		"iat": time.Now().Unix(),
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
+	accessToken, err := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		atClaims,
+	).SignedString([]byte(secret))
+	if err != nil {
+		return "", "", err
+	}
+
+	// 2. Refresh Token (1 year)
+	rtClaims := jwt.MapClaims{
+		"sub": userId,
+		"exp": time.Now().Add(time.Hour * 24 * 365).Unix(),
+	}
+	refreshToken, err := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		rtClaims,
+	).SignedString([]byte(secret))
+
+	return accessToken, refreshToken, err
 }
 
 func VerifyToken(tokenString string, secret string) (string, error) {
