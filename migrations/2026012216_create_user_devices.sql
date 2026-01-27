@@ -1,9 +1,9 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS public.user_devices (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES public.profiles(id),
-    fcm_token text,
-    device_type text,
+    user_id uuid NOT NULL REFERENCES public.profiles(id),
+    fcm_token text NOT NULL UNIQUE,
+    device_type text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
