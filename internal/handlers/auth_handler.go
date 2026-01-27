@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -13,12 +14,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/auth"
+	"github.com/rotsu1/jimu-backend/internal/middleware"
 	"github.com/rotsu1/jimu-backend/internal/models"
+	"github.com/rotsu1/jimu-backend/internal/repository"
 	"google.golang.org/api/idtoken"
 )
 
 type UserScanner interface {
 	UpsertGoogleUser(ctx context.Context, googleID, email string) (*models.Profile, error)
+	GetProfileByID(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error)
+	UpdateProfile(ctx context.Context, id uuid.UUID, updates models.UpdateProfileRequest) error
+	DeleteProfile(ctx context.Context, id uuid.UUID) error
 }
 
 type SessionScanner interface {
@@ -250,4 +256,130 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	// 5. Respond with success
 	w.WriteHeader(http.StatusNoContent) // 204 No Content is standard for successful logout
+}
+
+func (h *AuthHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
+	// 1. Grab the userID from the Context
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Fetch the profile
+	profile, err := h.UserRepo.GetProfileByID(r.Context(), userID, userID)
+	if err != nil {
+		log.Printf("Profile fetch error: %v", err)
+		http.Error(w, "Profile not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	json.NewEncoder(w).Encode(profile)
+}
+
+func (h *AuthHandler) GetOtherProfile(w http.ResponseWriter, r *http.Request) {
+	// 1. Grab the userID from the Context
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+
+	viewerID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	targetIDStr := r.URL.Query().Get("id")
+	targetID, err := uuid.Parse(targetIDStr)
+	if err != nil {
+		http.Error(w, "Invalid User ID", http.StatusBadRequest)
+		return
+	}
+
+	profile, err := h.UserRepo.GetProfileByID(r.Context(), viewerID, targetID)
+	if err != nil {
+		log.Printf("Profile fetch error: %v", err)
+		http.Error(w, "Profile not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	json.NewEncoder(w).Encode(profile)
+}
+
+func (h *AuthHandler) UpdateMyProfile(w http.ResponseWriter, r *http.Request) {
+	// 1. Grab the userID from the Context
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Decode the request body to get the profile data
+	var req models.UpdateProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Update the profile
+	err = h.UserRepo.UpdateProfile(r.Context(), userID, req)
+	if err != nil {
+		// Check for specific errors like 'Username Taken'
+		if errors.Is(err, repository.ErrUsernameTaken) {
+			http.Error(w, "Username already taken", http.StatusConflict)
+			return
+		}
+		log.Printf("Profile update error: %v", err)
+		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		return
+	}
+
+	// 4. Return Success
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) DeleteMyProfile(w http.ResponseWriter, r *http.Request) {
+	// 1. Grab the userID from the Context
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	// 2. Delete the profile
+	err = h.UserRepo.DeleteProfile(r.Context(), userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrProfileNotFound) {
+			http.Error(w, "Profile not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Profile deletion error: %v", err)
+		http.Error(w, "Failed to delete profile", http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Return Success
+	w.WriteHeader(http.StatusNoContent)
 }

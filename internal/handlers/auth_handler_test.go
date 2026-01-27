@@ -14,7 +14,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/auth"
+	"github.com/rotsu1/jimu-backend/internal/handlers/testutils"
 	"github.com/rotsu1/jimu-backend/internal/models"
+	"github.com/rotsu1/jimu-backend/internal/repository"
 	"google.golang.org/api/idtoken"
 )
 
@@ -22,6 +24,9 @@ import (
 
 type mockUserRepo struct {
 	UpsertGoogleUserFunc func(ctx context.Context, googleID, email string) (*models.Profile, error)
+	GetProfileByIDFunc   func(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error)
+	UpdateProfileFunc    func(ctx context.Context, id uuid.UUID, updates models.UpdateProfileRequest) error
+	DeleteProfileFunc    func(ctx context.Context, id uuid.UUID) error
 }
 
 func (m *mockUserRepo) UpsertGoogleUser(ctx context.Context, googleID, email string) (*models.Profile, error) {
@@ -29,6 +34,27 @@ func (m *mockUserRepo) UpsertGoogleUser(ctx context.Context, googleID, email str
 		return m.UpsertGoogleUserFunc(ctx, googleID, email)
 	}
 	return &models.Profile{ID: uuid.New()}, nil
+}
+
+func (m *mockUserRepo) GetProfileByID(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error) {
+	if m.GetProfileByIDFunc != nil {
+		return m.GetProfileByIDFunc(ctx, viewerID, targetID)
+	}
+	return &models.Profile{ID: uuid.New()}, nil
+}
+
+func (m *mockUserRepo) UpdateProfile(ctx context.Context, id uuid.UUID, updates models.UpdateProfileRequest) error {
+	if m.UpdateProfileFunc != nil {
+		return m.UpdateProfileFunc(ctx, id, updates)
+	}
+	return nil
+}
+
+func (m *mockUserRepo) DeleteProfile(ctx context.Context, id uuid.UUID) error {
+	if m.DeleteProfileFunc != nil {
+		return m.DeleteProfileFunc(ctx, id)
+	}
+	return nil
 }
 
 type mockSessionRepo struct {
@@ -345,27 +371,150 @@ func TestLogout_TokenVerificationFail(t *testing.T) {
 }
 
 func TestLogout_RevokeFail(t *testing.T) {
-	secret := "test-secret"
-	os.Setenv("JIMU_SECRET", secret)
-	defer os.Unsetenv("JIMU_SECRET")
-
-	uid := uuid.New()
-	token, _, _ := auth.GenerateTokenPair(uid.String(), secret)
-
 	mockSessionRepo := &mockSessionRepo{
 		RevokeAllSessionsForUserFunc: func(ctx context.Context, targetUserID uuid.UUID, viewerID uuid.UUID) error {
 			return errors.New("db error")
 		},
 	}
 	h := NewAuthHandler(&mockUserRepo{}, mockSessionRepo, &mockValidator{})
+	secret := "test-secret"
+	os.Setenv("JIMU_SECRET", secret)
+	defer os.Unsetenv("JIMU_SECRET")
+
+	// 1. We need a REAL-looking token because Logout calls auth.VerifyToken
+	uid := uuid.New()
+	token, _, _ := auth.GenerateTokenPair(uid.String(), secret)
 
 	req := httptest.NewRequest("POST", "/auth/logout", nil)
+
 	req.Header.Set("Authorization", "Bearer "+token)
+
+	req = testutils.InjectUserID(req, uid.String())
+
 	rr := httptest.NewRecorder()
 
 	h.Logout(rr, req)
 
 	if rr.Code != http.StatusInternalServerError {
 		t.Errorf("expected 500 Internal Server Error, got %d", rr.Code)
+	}
+}
+
+func TestGetMyProfile(t *testing.T) {
+	h := NewAuthHandler(&mockUserRepo{}, &mockSessionRepo{}, &mockValidator{})
+
+	req := httptest.NewRequest("GET", "/auth/profile", nil)
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.GetMyProfile(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", rr.Code)
+	}
+}
+
+func TestGetBlockedOrPrivateProfile(t *testing.T) {
+	mockUserRepo := &mockUserRepo{
+		GetProfileByIDFunc: func(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error) {
+			return nil, errors.New("profile not found")
+		},
+	}
+	h := NewAuthHandler(mockUserRepo, &mockSessionRepo{}, &mockValidator{})
+
+	req := httptest.NewRequest("GET", "/auth/profile", nil)
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.GetMyProfile(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("expected 404 Not Found, got %d", rr.Code)
+	}
+}
+
+func TestUpdateMyProfile(t *testing.T) {
+	h := NewAuthHandler(&mockUserRepo{}, &mockSessionRepo{}, &mockValidator{})
+
+	body := `{"username": "test-username"}`
+	req := httptest.NewRequest("PUT", "/auth/profile", strings.NewReader(body))
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.UpdateMyProfile(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("expected 204 No Content, got %d", rr.Code)
+	}
+}
+
+func TestUpdateUsernameTaken(t *testing.T) {
+	mockUserRepo := &mockUserRepo{
+		UpdateProfileFunc: func(ctx context.Context, id uuid.UUID, updates models.UpdateProfileRequest) error {
+			return repository.ErrUsernameTaken
+		},
+	}
+	h := NewAuthHandler(mockUserRepo, &mockSessionRepo{}, &mockValidator{})
+
+	body := `{"username": "test-username"}`
+	req := httptest.NewRequest("PUT", "/auth/profile", strings.NewReader(body))
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.UpdateMyProfile(rr, req)
+
+	if rr.Code != http.StatusConflict {
+		t.Errorf("expected 409 Conflict, got %d", rr.Code)
+	}
+}
+
+func TestDeleteMyProfile(t *testing.T) {
+	h := NewAuthHandler(&mockUserRepo{}, &mockSessionRepo{}, &mockValidator{})
+
+	req := httptest.NewRequest("DELETE", "/auth/profile", nil)
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.DeleteMyProfile(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Errorf("expected 204 No Content, got %d", rr.Code)
+	}
+}
+
+func TestDeleteNonExistentProfile(t *testing.T) {
+	mockUserRepo := &mockUserRepo{
+		DeleteProfileFunc: func(ctx context.Context, id uuid.UUID) error {
+			return repository.ErrProfileNotFound
+		},
+	}
+	h := NewAuthHandler(mockUserRepo, &mockSessionRepo{}, &mockValidator{})
+
+	req := httptest.NewRequest("DELETE", "/auth/profile", nil)
+
+	uid := uuid.New().String()
+	req = testutils.InjectUserID(req, uid)
+
+	rr := httptest.NewRecorder()
+
+	h.DeleteMyProfile(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("expected 404 Not Found, got %d", rr.Code)
 	}
 }
