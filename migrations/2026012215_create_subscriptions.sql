@@ -1,12 +1,12 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS public.subscriptions (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES public.profiles(id),
-    original_transaction_id text,
-    product_id text,
-    status text,
-    expires_at timestamp with time zone,
-    environment text,
+    user_id uuid NOT NULL UNIQUE REFERENCES public.profiles(id),
+    original_transaction_id text NOT NULL UNIQUE, 
+    product_id text NOT NULL,
+    status text NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    environment text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
