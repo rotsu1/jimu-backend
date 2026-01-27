@@ -7,6 +7,19 @@ const getUserIdentityByProviderQuery = `
 			AND provider_user_id = $2
 `
 
+const getIdentitiesByUserIDQuery = `
+			SELECT id, user_id, provider_name, provider_user_id, provider_email, last_sign_in_at, created_at, updated_at
+			FROM user_identities 
+			WHERE user_id = $1
+`
+
+const deleteIdentityQuery = `
+			DELETE FROM user_identities 
+			WHERE user_id = $1 
+			AND provider_name = $2 
+			AND provider_user_id = $3
+`
+
 const insertUserIdentityQuery = `
 			INSERT INTO user_identities (provider_name, provider_user_id, provider_email)
 			VALUES ('google', $1, $2)

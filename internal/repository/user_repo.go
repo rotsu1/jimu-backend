@@ -340,3 +340,47 @@ func (r *UserRepository) UpdateUserSettings(
 
 	return nil
 }
+
+func (r *UserRepository) GetIdentitiesByUserID(
+	ctx context.Context,
+	userID uuid.UUID,
+) ([]*models.UserIdentity, error) {
+	rows, err := r.DB.Query(ctx, getIdentitiesByUserIDQuery, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get identities: %w", err)
+	}
+	defer rows.Close()
+
+	var identities []*models.UserIdentity
+	for rows.Next() {
+		var i models.UserIdentity
+		err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.ProviderName,
+			&i.ProviderUserID,
+			&i.ProviderEmail,
+			&i.LastSignInAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan identity: %w", err)
+		}
+		identities = append(identities, &i)
+	}
+	return identities, nil
+}
+
+func (r *UserRepository) DeleteIdentity(
+	ctx context.Context,
+	userID uuid.UUID,
+	provider string,
+	providerUserID string,
+) error {
+	_, err := r.DB.Exec(ctx, deleteIdentityQuery, userID, provider, providerUserID)
+	if err != nil {
+		return fmt.Errorf("failed to delete identity: %w", err)
+	}
+	return nil
+}

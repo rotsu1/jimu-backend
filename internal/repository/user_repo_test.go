@@ -520,3 +520,110 @@ func TestNotFoundDeleteProfile(t *testing.T) {
 		t.Errorf("Expected ErrProfileNotFound, but got %v", err)
 	}
 }
+
+// Test GetIdentitiesByUserID Functionality
+func TestGetIdentitiesByUserID(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	// 1. Create a user
+	googleID := "google-123"
+	email := "test@example.com"
+	profile, err := repo.UpsertGoogleUser(ctx, googleID, email)
+	if err != nil {
+		t.Fatalf("Failed to upsert user: %v", err)
+	}
+
+	// 2. Fetch identities
+	identities, err := repo.GetIdentitiesByUserID(ctx, profile.ID)
+	if err != nil {
+		t.Fatalf("Failed to get identities by user ID: %v", err)
+	}
+
+	// 3. Assertions
+	if len(identities) != 1 {
+		t.Errorf("Expected 1 identity, got %d", len(identities))
+	}
+	if identities[0].ProviderName != "google" {
+		t.Errorf("Expected provider 'google', got %s", identities[0].ProviderName)
+	}
+	if identities[0].ProviderUserID != googleID {
+		t.Errorf("Expected provider user ID %s, got %s", googleID, identities[0].ProviderUserID)
+	}
+	if identities[0].UserID != profile.ID {
+		t.Errorf("Expected user ID %v, got %v", profile.ID, identities[0].UserID)
+	}
+
+	// 4. Manually verify DB count
+	var count int
+	err = db.QueryRow(ctx, "SELECT COUNT(*) FROM user_identities WHERE user_id = $1", profile.ID).Scan(&count)
+	if err != nil {
+		t.Fatalf("Failed to count identities: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("Expected count 1 from DB, got %d", count)
+	}
+}
+
+func TestGetIdentitiesByUserID_NotFound(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	randomID := uuid.New()
+	identities, err := repo.GetIdentitiesByUserID(ctx, randomID)
+	if err != nil {
+		t.Fatalf("Failed to get identities for non-existent user: %v", err)
+	}
+	if len(identities) != 0 {
+		t.Errorf("Expected 0 identities, got %d", len(identities))
+	}
+}
+
+// Test DeleteIdentity Functionality
+func TestDeleteIdentity(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewUserRepository(db)
+	ctx := context.Background()
+
+	// 1. Create user with an identity
+	googleID := "google-delete-test"
+	email := "delete@example.com"
+	profile, err := repo.UpsertGoogleUser(ctx, googleID, email)
+	if err != nil {
+		t.Fatalf("Failed to upsert user: %v", err)
+	}
+
+	// 2. Verify identity exists
+	identities, err := repo.GetIdentitiesByUserID(ctx, profile.ID)
+	if err != nil || len(identities) != 1 {
+		t.Fatalf("Pre-condition failed: identity should exist")
+	}
+
+	// 3. Delete the identity
+	err = repo.DeleteIdentity(ctx, profile.ID, "google", googleID)
+	if err != nil {
+		t.Fatalf("Failed to delete identity: %v", err)
+	}
+
+	// 4. Verify identity is gone
+	identities, err = repo.GetIdentitiesByUserID(ctx, profile.ID)
+	if err != nil {
+		t.Fatalf("Failed to get identities after deletion: %v", err)
+	}
+	if len(identities) != 0 {
+		t.Errorf("Expected 0 identities after deletion, got %d", len(identities))
+	}
+
+	// Double check via direct query
+	_, err = repo.GetIdentityByProvider(ctx, "google", googleID)
+	if err == nil {
+		t.Error("Expected error (NoRows) when fetching deleted identity, got nil")
+	} else if !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("Expected pgx.ErrNoRows, got %v", err)
+	}
+}
