@@ -287,7 +287,6 @@ func (h *AuthHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) GetOtherProfile(w http.ResponseWriter, r *http.Request) {
-	// 1. Grab the userID from the Context
 	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
@@ -300,8 +299,12 @@ func (h *AuthHandler) GetOtherProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetIDStr := r.URL.Query().Get("id")
-	targetID, err := uuid.Parse(targetIDStr)
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) == 0 {
+		http.Error(w, "Invalid URL path", http.StatusBadRequest)
+		return
+	}
+	targetID, err := uuid.Parse(parts[len(parts)-1])
 	if err != nil {
 		http.Error(w, "Invalid User ID", http.StatusBadRequest)
 		return

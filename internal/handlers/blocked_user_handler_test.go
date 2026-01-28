@@ -97,7 +97,7 @@ func TestBlockUser_ReferenceViolation(t *testing.T) {
 func TestUnblockUser_Success(t *testing.T) {
 	h := NewBlockedUserHandler(&mockBlockedUserRepo{})
 
-	req := httptest.NewRequest("DELETE", "/blocked-users?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/blocked-users/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -116,7 +116,7 @@ func TestUnblockUser_NotFound(t *testing.T) {
 	}
 	h := NewBlockedUserHandler(mockRepo)
 
-	req := httptest.NewRequest("DELETE", "/blocked-users?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/blocked-users/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

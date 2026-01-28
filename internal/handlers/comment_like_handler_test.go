@@ -46,7 +46,7 @@ func (m *mockCommentLikeRepo) GetCommentLikesByCommentID(ctx context.Context, co
 func TestLikeComment_Success(t *testing.T) {
 	h := NewCommentLikeHandler(&mockCommentLikeRepo{})
 
-	req := httptest.NewRequest("POST", "/comments/likes?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("POST", "/comments/00000000-0000-0000-0000-000000000001/likes", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -60,7 +60,7 @@ func TestLikeComment_Success(t *testing.T) {
 func TestUnlikeComment_Success(t *testing.T) {
 	h := NewCommentLikeHandler(&mockCommentLikeRepo{})
 
-	req := httptest.NewRequest("DELETE", "/comments/likes?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/comments/00000000-0000-0000-0000-000000000001/likes", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -79,7 +79,7 @@ func TestUnlikeComment_NotFound(t *testing.T) {
 	}
 	h := NewCommentLikeHandler(mockRepo)
 
-	req := httptest.NewRequest("DELETE", "/comments/likes?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/comments/00000000-0000-0000-0000-000000000001/likes", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

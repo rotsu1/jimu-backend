@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -73,7 +74,6 @@ func (h *BlockedUserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BlockedUserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
-	// 1. Context Check
 	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
@@ -85,8 +85,12 @@ func (h *BlockedUserHandler) UnblockUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 2. Request Decoding
-	blockedID, err := GetIDFromRequest(r)
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) == 0 {
+		http.Error(w, "Invalid URL path", http.StatusBadRequest)
+		return
+	}
+	blockedID, err := uuid.Parse(parts[len(parts)-1])
 	if err != nil {
 		http.Error(w, "Invalid or missing user ID", http.StatusBadRequest)
 		return
