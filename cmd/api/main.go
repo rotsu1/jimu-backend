@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/rotsu1/jimu-backend/internal/db"
 	"github.com/rotsu1/jimu-backend/internal/handlers"
 	"github.com/rotsu1/jimu-backend/internal/repository"
@@ -65,6 +66,7 @@ func main() {
 	routineExerciseHandler := handlers.NewRoutineExerciseHandler(routineExerciseRepo)
 	routineSetHandler := handlers.NewRoutineSetHandler(routineSetRepo)
 
+	_ = godotenv.Load()
 	JWTSecret := os.Getenv("JWTSecret")
 	if JWTSecret == "" {
 		log.Fatal("JWTSecret is not set")
