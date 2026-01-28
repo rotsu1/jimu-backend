@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -43,7 +44,14 @@ func (h *RoutineExerciseHandler) AddExercise(w http.ResponseWriter, r *http.Requ
 	}
 
 	// 2. Request Decoding
-	routineID, err := GetIDFromRequest(r)
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 {
+		http.Error(w, "Invalid URL path", http.StatusBadRequest)
+		return
+	}
+
+	// The Routine ID is at index 2
+	routineID, err := uuid.Parse(parts[2])
 	if err != nil {
 		http.Error(w, "Invalid or missing routine ID", http.StatusBadRequest)
 		return
