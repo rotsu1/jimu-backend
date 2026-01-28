@@ -69,7 +69,7 @@ func TestAddExerciseToRoutine_Success(t *testing.T) {
 	// ADD THE QUERY PARAM: ?id=...
 	// This ensures GetIDFromRequest(r) finds the Routine ID
 	targetID := "00000000-0000-0000-0000-000000000001"
-	url := fmt.Sprintf("/routines/exercises?id=%s", targetID)
+	url := fmt.Sprintf("/routines/%s/exercises", targetID)
 
 	req := httptest.NewRequest("POST", url, strings.NewReader(body))
 	req = testutils.InjectUserID(req, uuid.New().String())
