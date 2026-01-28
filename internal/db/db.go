@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/rotsu1/jimu-backend"
 )
 
 func InitDB() (*pgxpool.Pool, error) {
@@ -26,6 +30,11 @@ func InitDB() (*pgxpool.Pool, error) {
 		)
 	}
 
+	// Run Migrations First
+	if err := runMigrations(connString); err != nil {
+		return nil, fmt.Errorf("migration failed: %w", err)
+	}
+
 	// 3. Configure the Pool
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
@@ -42,4 +51,23 @@ func InitDB() (*pgxpool.Pool, error) {
 	}
 
 	return pool, nil
+}
+
+func runMigrations(connString string) error {
+	d, err := iofs.New(jimu.MigrationFiles, "migrations")
+	if err != nil {
+		return err
+	}
+
+	m, err := migrate.NewWithSourceInstance("iofs", d, connString)
+	if err != nil {
+		return err
+	}
+
+	// This applies all 'up' migrations that haven't been run yet
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	return nil
 }

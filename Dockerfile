@@ -16,7 +16,7 @@ COPY . .
 
 # Build the Go app into a static binary named 'main'
 # CGO_ENABLED=0 makes the binary independent of system libraries
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/api/main.go
 
 # STAGE 2: Create the final tiny image
 FROM alpine:latest
