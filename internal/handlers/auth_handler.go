@@ -7,7 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/netip"
+
 	"os"
 	"strings"
 	"time"
@@ -30,7 +30,7 @@ type UserScanner interface {
 }
 
 type SessionScanner interface {
-	CreateSession(ctx context.Context, userID uuid.UUID, token string, agent *string, ip *netip.Addr, exp time.Time) (*models.UserSession, error)
+	CreateSession(ctx context.Context, userID uuid.UUID, token string, agent *string, ip *string, exp time.Time) (*models.UserSession, error)
 	GetSessionByRefreshToken(ctx context.Context, token string) (*models.UserSession, error)
 	RevokeSession(ctx context.Context, id uuid.UUID, viewerID uuid.UUID) error
 	RevokeAllSessionsForUser(ctx context.Context, targetUserID uuid.UUID, viewerID uuid.UUID) error
@@ -114,20 +114,14 @@ func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	// We set the expiry to match the Refresh Token (1 year)
 	expiresAt := time.Now().Add(time.Hour * 24 * 365)
 	userAgent := r.UserAgent()
-	var ipPtr *netip.Addr
+	var ipPtr *string
 	if r.RemoteAddr != "" {
-		// RemoteAddr usually includes a port (e.g., "127.0.0.1:1234")
-		// we need to strip it to get just the IP
 		host, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err == nil {
-			if parsedIP, err := netip.ParseAddr(host); err == nil {
-				ipPtr = &parsedIP
-			}
+			ipPtr = &host
 		} else {
-			// If there's no port, just try parsing the whole string
-			if parsedIP, err := netip.ParseAddr(r.RemoteAddr); err == nil {
-				ipPtr = &parsedIP
-			}
+			// If no port, use the whole string
+			ipPtr = &r.RemoteAddr
 		}
 	}
 
@@ -187,17 +181,13 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	userAgent := r.UserAgent()
 	// Handle IP address (strip port if present, ignore errors)
-	var ipPtr *netip.Addr
+	var ipPtr *string
 	if r.RemoteAddr != "" {
 		host, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err == nil {
-			if parsedIP, err := netip.ParseAddr(host); err == nil {
-				ipPtr = &parsedIP
-			}
+			ipPtr = &host
 		} else {
-			if parsedIP, err := netip.ParseAddr(r.RemoteAddr); err == nil {
-				ipPtr = &parsedIP
-			}
+			ipPtr = &r.RemoteAddr
 		}
 	}
 	expiresAt := time.Now().Add(time.Hour * 24 * 365)

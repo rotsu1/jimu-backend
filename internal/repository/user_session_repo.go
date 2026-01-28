@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/netip"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,7 +29,7 @@ func (r *UserSessionRepository) CreateSession(
 	userID uuid.UUID,
 	refreshToken string,
 	userAgent *string,
-	clientIP *netip.Addr,
+	clientIP *string,
 	expiresAt time.Time,
 ) (*models.UserSession, error) {
 	var session models.UserSession

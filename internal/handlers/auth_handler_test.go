@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"net/netip"
+
 	"os"
 	"strings"
 	"testing"
@@ -75,7 +75,7 @@ func (m *mockUserRepo) DeleteIdentity(ctx context.Context, userID uuid.UUID, pro
 }
 
 type mockSessionRepo struct {
-	CreateSessionFunc            func(ctx context.Context, userID uuid.UUID, token string, agent *string, ip *netip.Addr, exp time.Time) (*models.UserSession, error)
+	CreateSessionFunc            func(ctx context.Context, userID uuid.UUID, token string, agent *string, ip *string, exp time.Time) (*models.UserSession, error)
 	GetSessionByRefreshTokenFunc func(ctx context.Context, token string) (*models.UserSession, error)
 	RevokeSessionFunc            func(ctx context.Context, id uuid.UUID, viewerID uuid.UUID) error
 	RevokeAllSessionsForUserFunc func(ctx context.Context, targetUserID uuid.UUID, viewerID uuid.UUID) error
@@ -86,7 +86,7 @@ func (m *mockSessionRepo) CreateSession(
 	userID uuid.UUID,
 	token string,
 	agent *string,
-	ip *netip.Addr,
+	ip *string,
 	exp time.Time,
 ) (*models.UserSession, error) {
 	if m.CreateSessionFunc != nil {
@@ -211,7 +211,7 @@ func TestGoogleLogin_DatabaseDown(t *testing.T) {
 
 func TestGoogleLogin_SessionSaveFail(t *testing.T) {
 	mockSessionRepo := &mockSessionRepo{
-		CreateSessionFunc: func(ctx context.Context, userID uuid.UUID, token string, agent *string, ip *netip.Addr, exp time.Time) (*models.UserSession, error) {
+		CreateSessionFunc: func(ctx context.Context, userID uuid.UUID, token string, agent *string, ip *string, exp time.Time) (*models.UserSession, error) {
 			return nil, errors.New("session save error")
 		},
 	}
@@ -278,7 +278,7 @@ func TestRefreshToken_RotationSuccess(t *testing.T) {
 			}
 			return nil
 		},
-		CreateSessionFunc: func(ctx context.Context, uid uuid.UUID, token string, agent *string, ip *netip.Addr, exp time.Time) (*models.UserSession, error) {
+		CreateSessionFunc: func(ctx context.Context, uid uuid.UUID, token string, agent *string, ip *string, exp time.Time) (*models.UserSession, error) {
 			if uid == userID {
 				createCalled = true
 			}
@@ -319,7 +319,7 @@ func TestRefreshToken_WonkyIP(t *testing.T) {
 		GetSessionByRefreshTokenFunc: func(ctx context.Context, token string) (*models.UserSession, error) {
 			return &models.UserSession{ID: uuid.New(), UserID: uuid.New()}, nil
 		},
-		CreateSessionFunc: func(ctx context.Context, uid uuid.UUID, token string, agent *string, ip *netip.Addr, exp time.Time) (*models.UserSession, error) {
+		CreateSessionFunc: func(ctx context.Context, uid uuid.UUID, token string, agent *string, ip *string, exp time.Time) (*models.UserSession, error) {
 			return &models.UserSession{ID: uuid.New(), UserID: uid}, nil
 		},
 	}

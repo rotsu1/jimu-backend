@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.user_sessions (
     user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     refresh_token text UNIQUE NOT NULL,
     user_agent text, -- Store device info (e.g., "iPhone 15 Pro")
-    client_ip inet,
+    client_ip text,
     is_revoked boolean NOT NULL DEFAULT false,
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),

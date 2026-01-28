@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
-	"net/netip"
+
 	"testing"
 	"time"
 
@@ -22,10 +22,9 @@ func TestCreateUserSession(t *testing.T) {
 	refreshToken := "refresh_token_123"
 	userAgent := "TestAgent/1.0"
 	clientIP := "127.0.0.1"
-	clientIPAddr, _ := netip.ParseAddr(clientIP)
 	expiresAt := time.Now().Add(24 * time.Hour)
 
-	session, err := repo.CreateSession(ctx, userID, refreshToken, &userAgent, &clientIPAddr, expiresAt)
+	session, err := repo.CreateSession(ctx, userID, refreshToken, &userAgent, &clientIP, expiresAt)
 	if err != nil {
 		t.Fatalf("Failed to create session: %v", err)
 	}
