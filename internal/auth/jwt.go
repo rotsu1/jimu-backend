@@ -8,11 +8,12 @@ import (
 )
 
 // GenerateTokenPair creates a short-lived access token and a long-lived refresh token.
-func GenerateTokenPair(userId string, secret string) (string, string, error) {
+func GenerateTokenPair(userId string, secret string) (string, string, int64, error) {
 	// 1. Access Token (15 Minutes)
+	expiresIn := time.Now().Add(time.Minute * 15).Unix()
 	atClaims := jwt.MapClaims{
 		"sub": userId,
-		"exp": time.Now().Add(time.Minute * 15).Unix(),
+		"exp": expiresIn,
 		"iat": time.Now().Unix(),
 	}
 	accessToken, err := jwt.NewWithClaims(
@@ -20,7 +21,7 @@ func GenerateTokenPair(userId string, secret string) (string, string, error) {
 		atClaims,
 	).SignedString([]byte(secret))
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
 
 	// 2. Refresh Token (1 year)
@@ -33,7 +34,7 @@ func GenerateTokenPair(userId string, secret string) (string, string, error) {
 		rtClaims,
 	).SignedString([]byte(secret))
 
-	return accessToken, refreshToken, err
+	return accessToken, refreshToken, expiresIn, err
 }
 
 func VerifyToken(tokenString string, secret string) (string, error) {

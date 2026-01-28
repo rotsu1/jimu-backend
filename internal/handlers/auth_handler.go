@@ -20,6 +20,12 @@ import (
 	"google.golang.org/api/idtoken"
 )
 
+type AuthResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
+}
+
 type UserScanner interface {
 	UpsertGoogleUser(ctx context.Context, googleID, email string) (*models.Profile, error)
 	GetProfileByID(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID) (*models.Profile, error)
@@ -104,7 +110,7 @@ func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// 4. Generate the Dual-Token Pair
 	secret := os.Getenv("JIMU_SECRET")
-	accessToken, refreshToken, err := auth.GenerateTokenPair(user.ID.String(), secret)
+	accessToken, refreshToken, expiresIn, err := auth.GenerateTokenPair(user.ID.String(), secret)
 	if err != nil {
 		http.Error(w, "Token generation error", http.StatusInternalServerError)
 		return
@@ -140,10 +146,13 @@ func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// 6. Return both tokens to the iOS app
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-	})
+
+	response := AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresIn:    expiresIn,
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +176,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	// 3. Generate a NEW token pair
 	secret := os.Getenv("JIMU_SECRET")
-	newAccessToken, newRefreshToken, err := auth.GenerateTokenPair(session.UserID.String(), secret)
+	newAccessToken, newRefreshToken, expiresIn, err := auth.GenerateTokenPair(session.UserID.String(), secret)
 	if err != nil {
 		http.Error(w, "Token generation error", http.StatusInternalServerError)
 		return
@@ -206,10 +215,13 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	// 5. Send the new pair back to the Swift app
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"access_token":  newAccessToken,
-		"refresh_token": newRefreshToken,
-	})
+
+	response := AuthResponse{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+		ExpiresIn:    expiresIn,
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {

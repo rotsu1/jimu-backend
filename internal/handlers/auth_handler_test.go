@@ -400,7 +400,7 @@ func TestLogout_RevokeFail(t *testing.T) {
 
 	// 1. We need a REAL-looking token because Logout calls auth.VerifyToken
 	uid := uuid.New()
-	token, _, _ := auth.GenerateTokenPair(uid.String(), secret)
+	token, _, _, _ := auth.GenerateTokenPair(uid.String(), secret)
 
 	req := httptest.NewRequest("POST", "/auth/logout", nil)
 
