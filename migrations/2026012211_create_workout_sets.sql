@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS public.workout_sets (
     reps integer,
     is_completed boolean DEFAULT false,
     order_index integer,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_exercise_id ON public.workout_sets(workout_exercise_id);

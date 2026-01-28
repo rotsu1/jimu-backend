@@ -9,14 +9,14 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     avatar_url text,
     subscription_plan text,
     is_private_account boolean DEFAULT false,
-    last_worked_out_at timestamp with time zone,
+    last_worked_out_at TIMESTAMPTZ,
     total_workouts integer DEFAULT 0,
     current_streak integer DEFAULT 0,
     total_weight numeric DEFAULT 0,
     followers_count integer DEFAULT 0,
     following_count integer DEFAULT 0,
-    updated_at timestamp with time zone DEFAULT now(),
-    created_at timestamp with time zone DEFAULT now()
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Create index on username for faster lookups

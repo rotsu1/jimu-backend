@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS public.workout_images (
     workout_id uuid REFERENCES public.workouts(id) ON DELETE CASCADE,
     storage_path text,
     display_order integer,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_workout_images_workout_id ON public.workout_images(workout_id);

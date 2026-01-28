@@ -5,9 +5,9 @@ CREATE TABLE IF NOT EXISTS public.user_identities (
     provider_name text NOT NULL, -- 'google' or 'apple'
     provider_user_id text NOT NULL, -- The 'sub' or 'id' from the Google/Apple token
     provider_email text,
-    last_sign_in_at timestamp with time zone DEFAULT now(),
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
+    last_sign_in_at TIMESTAMPTZ DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(provider_name, provider_user_id)
 );
 

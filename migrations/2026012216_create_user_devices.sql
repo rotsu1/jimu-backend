@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS public.user_devices (
     user_id uuid NOT NULL REFERENCES public.profiles(id),
     fcm_token text NOT NULL UNIQUE,
     device_type text NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Create indexes for better query performance

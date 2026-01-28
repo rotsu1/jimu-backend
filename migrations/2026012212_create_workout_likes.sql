@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS public.workout_likes (
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     workout_id uuid REFERENCES public.workouts(id) ON DELETE CASCADE,
-    created_at timestamp with time zone DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY (user_id, workout_id)
 );
 

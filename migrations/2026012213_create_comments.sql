@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.comments (
     parent_id uuid REFERENCES public.comments(id) ON DELETE CASCADE,
     content text NOT NULL,
     likes_count integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Create indexes for better query performance

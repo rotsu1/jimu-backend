@@ -5,10 +5,10 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
     original_transaction_id text NOT NULL UNIQUE, 
     product_id text NOT NULL,
     status text NOT NULL,
-    expires_at timestamp with time zone NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
     environment text NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Create indexes for better query performance

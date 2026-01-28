@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
     unit_weight text DEFAULT 'kg',
     unit_distance text DEFAULT 'km',
     unit_length text DEFAULT 'cm',
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- +migrate Down

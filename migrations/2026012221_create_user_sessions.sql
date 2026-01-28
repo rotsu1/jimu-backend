@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS public.user_sessions (
     user_agent text, -- Store device info (e.g., "iPhone 15 Pro")
     client_ip inet,
     is_revoked boolean NOT NULL DEFAULT false,
-    expires_at timestamp with time zone NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Index for fast lookups during token refresh

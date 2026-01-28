@@ -2,7 +2,7 @@
 CREATE TABLE public.blocked_users (
     blocker_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     blocked_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
-    created_at timestamp with time zone DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY (blocker_id, blocked_id)
 );
 

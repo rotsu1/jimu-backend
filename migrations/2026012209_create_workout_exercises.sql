@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS public.workout_exercises (
     order_index integer,
     memo text,
     rest_timer_seconds integer,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_workout_exercises_workout_id ON public.workout_exercises(workout_id);

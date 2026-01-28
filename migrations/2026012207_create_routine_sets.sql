@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS public.routine_sets (
     weight numeric,
     reps integer,
     order_index integer,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_routine_sets_routine_exercise_id ON public.routine_sets(routine_exercise_id);

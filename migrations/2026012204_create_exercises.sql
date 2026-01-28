@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS public.exercises (
     name text NOT NULL,
     suggested_rest_seconds integer,
     icon text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Create indexes for better query performance

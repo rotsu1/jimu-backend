@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS public.comment_likes (
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     comment_id uuid REFERENCES public.comments(id) ON DELETE CASCADE,
-    created_at timestamp with time zone DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY (user_id, comment_id)
 );
 

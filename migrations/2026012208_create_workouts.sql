@@ -4,14 +4,14 @@ CREATE TABLE IF NOT EXISTS public.workouts (
     user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     name text,
     comment text,
-    started_at timestamp with time zone NOT NULL,
-    ended_at timestamp with time zone NOT NULL,
+    started_at TIMESTAMPTZ NOT NULL,
+    ended_at TIMESTAMPTZ NOT NULL,
     duration_seconds integer DEFAULT 0 NOT NULL,
     total_weight numeric DEFAULT 0 NOT NULL,
     likes_count integer DEFAULT 0 NOT NULL,
     comments_count integer DEFAULT 0 NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Create indexes for better query performance
@@ -23,7 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_workouts_created_at ON public.workouts(created_at
 CREATE OR REPLACE FUNCTION handle_profile_stats_sync()
 RETURNS TRIGGER AS $$
 DECLARE
-    last_workout timestamp with time zone;
+    last_workout TIMESTAMPTZ;
 BEGIN
     IF (TG_OP = 'INSERT') THEN
         -- 1. Get the last workout time before we update it
