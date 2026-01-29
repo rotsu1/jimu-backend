@@ -15,7 +15,7 @@ import (
 )
 
 type WorkoutImageScanner interface {
-	CreateWorkoutImage(ctx context.Context, workoutID uuid.UUID, storagePath string, displayOrder *int, userID uuid.UUID) (*models.WorkoutImage, error)
+	CreateWorkoutImage(ctx context.Context, workoutID uuid.UUID, storagePath string, displayOrder int, userID uuid.UUID) (*models.WorkoutImage, error)
 	GetWorkoutImageByID(ctx context.Context, id uuid.UUID) (*models.WorkoutImage, error)
 	GetWorkoutImagesByWorkoutID(ctx context.Context, workoutID uuid.UUID) ([]*models.WorkoutImage, error)
 	DeleteWorkoutImage(ctx context.Context, workoutImageID uuid.UUID, userID uuid.UUID) error
@@ -63,7 +63,7 @@ func (h *WorkoutImageHandler) AddImage(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		StoragePath  string `json:"storage_path"`
-		DisplayOrder *int   `json:"display_order"`
+		DisplayOrder int    `json:"display_order"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

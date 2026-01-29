@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.routine_sets (
     routine_exercise_id uuid REFERENCES public.routine_exercises(id) ON DELETE CASCADE,
     weight numeric,
     reps integer,
-    order_index integer,
+    order_index integer NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );

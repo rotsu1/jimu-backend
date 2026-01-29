@@ -26,7 +26,7 @@ func (r *WorkoutImageRepository) CreateWorkoutImage(
 	ctx context.Context,
 	workoutID uuid.UUID,
 	storagePath string,
-	displayOrder *int,
+	displayOrder int,
 	userID uuid.UUID,
 ) (*models.WorkoutImage, error) {
 	var wi models.WorkoutImage

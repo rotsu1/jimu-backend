@@ -24,13 +24,13 @@ func TestCreateWorkoutSet(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Bench Press", nil, nil, userID)
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 
 	weight := 100.0
 	reps := 10
 	orderIndex := 1
 
-	ws, err := wsRepo.CreateWorkoutSet(ctx, we.ID, &weight, &reps, false, &orderIndex, userID)
+	ws, err := wsRepo.CreateWorkoutSet(ctx, we.ID, &weight, &reps, false, orderIndex, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout set: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestCreateWorkoutSetNotFoundWorkoutExercise(t *testing.T) {
 	ctx := context.Background()
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
-	_, err := wsRepo.CreateWorkoutSet(ctx, uuid.New(), nil, nil, false, nil, userID)
+	_, err := wsRepo.CreateWorkoutSet(ctx, uuid.New(), nil, nil, false, 0, userID)
 	if err == nil {
 		t.Errorf("Expected error, but got nil")
 	}
@@ -79,11 +79,11 @@ func TestCreateWorkoutSetSyncWorkoutStatus(t *testing.T) {
 	reps := 20
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Bench Press", nil, nil, userID)
-	we, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout exercise: %v", err)
 	}
-	_, err = wsRepo.CreateWorkoutSet(ctx, we.ID, &weight, &reps, false, nil, userID)
+	_, err = wsRepo.CreateWorkoutSet(ctx, we.ID, &weight, &reps, false, 0, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout set: %v", err)
 	}
@@ -109,9 +109,9 @@ func TestGetWorkoutSetByID(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Squat", nil, nil, userID)
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 
-	created, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, nil, userID)
+	created, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, 0, userID)
 
 	ws, err := wsRepo.GetWorkoutSetByID(ctx, created.ID)
 	if err != nil {
@@ -147,12 +147,12 @@ func TestGetWorkoutSetsByWorkoutExerciseID(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Deadlift", nil, nil, userID)
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 
 	order1 := 2
 	order2 := 1
-	wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, &order1, userID)
-	wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, true, &order2, userID)
+	wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, order1, userID)
+	wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, true, order2, userID)
 
 	sets, err := wsRepo.GetWorkoutSetsByWorkoutExerciseID(ctx, we.ID)
 	if err != nil {
@@ -164,7 +164,7 @@ func TestGetWorkoutSetsByWorkoutExerciseID(t *testing.T) {
 	}
 
 	// Should be ordered by order_index ASC
-	if *sets[0].OrderIndex != 1 {
+	if sets[0].OrderIndex != 1 {
 		t.Errorf("Expected first set to have order_index 1")
 	}
 }
@@ -181,9 +181,9 @@ func TestUpdateWorkoutSet(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "OHP", nil, nil, userID)
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 
-	ws, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, nil, userID)
+	ws, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, 0, userID)
 
 	newWeight := 50.0
 	newReps := 8
@@ -234,9 +234,9 @@ func TestDeleteWorkoutSet(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Row", nil, nil, userID)
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 
-	ws, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, nil, userID)
+	ws, _ := wsRepo.CreateWorkoutSet(ctx, we.ID, nil, nil, false, 0, userID)
 	wsID := ws.ID
 
 	err := wsRepo.DeleteWorkoutSet(ctx, wsID, userID)

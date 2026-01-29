@@ -15,7 +15,7 @@ import (
 )
 
 type RoutineSetScanner interface {
-	CreateRoutineSet(ctx context.Context, routineExerciseID uuid.UUID, weight *float64, reps *int, orderIndex *int, userID uuid.UUID) (*models.RoutineSet, error)
+	CreateRoutineSet(ctx context.Context, routineExerciseID uuid.UUID, weight *float64, reps *int, orderIndex int, userID uuid.UUID) (*models.RoutineSet, error)
 	GetRoutineSetByID(ctx context.Context, id uuid.UUID) (*models.RoutineSet, error)
 	GetRoutineSetsByRoutineExerciseID(ctx context.Context, routineExerciseID uuid.UUID) ([]*models.RoutineSet, error)
 	UpdateRoutineSet(ctx context.Context, id uuid.UUID, updates models.UpdateRoutineSetRequest, userID uuid.UUID) error
@@ -74,7 +74,7 @@ func (h *RoutineSetHandler) AddSet(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Weight     *float64 `json:"weight"`
 		Reps       *int     `json:"reps"`
-		OrderIndex *int     `json:"order_index"`
+		OrderIndex int      `json:"order_index"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

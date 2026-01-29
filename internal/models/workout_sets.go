@@ -12,7 +12,7 @@ type WorkoutSet struct {
 	Weight            *float64  `json:"weight,omitempty" db:"weight"`
 	Reps              *int      `json:"reps,omitempty" db:"reps"`
 	IsCompleted       bool      `json:"is_completed" db:"is_completed"`
-	OrderIndex        *int      `json:"order_index,omitempty" db:"order_index"`
+	OrderIndex        int       `json:"order_index,omitempty" db:"order_index"`
 	CreatedAt         time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 }

@@ -27,7 +27,7 @@ func (r *WorkoutExerciseRepository) CreateWorkoutExercise(
 	ctx context.Context,
 	workoutID uuid.UUID,
 	exerciseID uuid.UUID,
-	orderIndex *int,
+	orderIndex int,
 	memo *string,
 	restTimerSeconds *int,
 	userID uuid.UUID,
@@ -143,11 +143,7 @@ func (r *WorkoutExerciseRepository) UpdateWorkoutExercise(
 
 	if updates.OrderIndex != nil {
 		sets = append(sets, fmt.Sprintf("order_index = $%d", i))
-		if *updates.OrderIndex == 0 {
-			args = append(args, nil)
-		} else {
-			args = append(args, *updates.OrderIndex)
-		}
+		args = append(args, *updates.OrderIndex)
 		i++
 	}
 	if updates.Memo != nil {

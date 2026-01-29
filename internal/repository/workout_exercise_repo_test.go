@@ -38,7 +38,7 @@ func TestCreateWorkoutExercise(t *testing.T) {
 	memo := "Focus on form"
 	restTimer := 90
 
-	we, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, &orderIndex, &memo, &restTimer, userID)
+	we, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, orderIndex, &memo, &restTimer, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout exercise: %v", err)
 	}
@@ -49,8 +49,8 @@ func TestCreateWorkoutExercise(t *testing.T) {
 	if we.WorkoutID != workout.ID {
 		t.Errorf("WorkoutID mismatch: got %v, want %v", we.WorkoutID, workout.ID)
 	}
-	if *we.OrderIndex != orderIndex {
-		t.Errorf("OrderIndex mismatch: got %v, want %v", *we.OrderIndex, orderIndex)
+	if we.OrderIndex != orderIndex {
+		t.Errorf("OrderIndex mismatch: got %v, want %v", we.OrderIndex, orderIndex)
 	}
 }
 
@@ -63,7 +63,7 @@ func TestCreateWorkoutExerciseNotFoundWorkout(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Bench Press", nil, nil, userID)
-	_, err := weRepo.CreateWorkoutExercise(ctx, uuid.New(), exercise.ID, nil, nil, nil, userID)
+	_, err := weRepo.CreateWorkoutExercise(ctx, uuid.New(), exercise.ID, 0, nil, nil, userID)
 	if !errors.Is(err, ErrReferenceViolation) {
 		t.Errorf("Expected ErrReferenceViolation, but got %v", err)
 	}
@@ -85,7 +85,7 @@ func TestGetWorkoutExerciseByID(t *testing.T) {
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Squat", nil, nil, userID)
 
-	created, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	created, err := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout exercise: %v", err)
 	}
@@ -131,8 +131,8 @@ func TestGetWorkoutExercisesByWorkoutID(t *testing.T) {
 
 	order1 := 2
 	order2 := 1
-	weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise1.ID, &order1, nil, nil, userID)
-	weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise2.ID, &order2, nil, nil, userID)
+	weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise1.ID, order1, nil, nil, userID)
+	weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise2.ID, order2, nil, nil, userID)
 
 	exercises, err := weRepo.GetWorkoutExercisesByWorkoutID(ctx, workout.ID)
 	if err != nil {
@@ -161,7 +161,7 @@ func TestUpdateWorkoutExercise(t *testing.T) {
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Deadlift", nil, nil, userID)
 
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 
 	newMemo := "Updated memo"
 	newOrder := 5
@@ -177,8 +177,8 @@ func TestUpdateWorkoutExercise(t *testing.T) {
 	if *updated.Memo != newMemo {
 		t.Errorf("Memo was not updated: got %v, want %v", *updated.Memo, newMemo)
 	}
-	if *updated.OrderIndex != newOrder {
-		t.Errorf("OrderIndex was not updated: got %v, want %v", *updated.OrderIndex, newOrder)
+	if updated.OrderIndex != newOrder {
+		t.Errorf("OrderIndex was not updated: got %v, want %v", updated.OrderIndex, newOrder)
 	}
 }
 
@@ -209,7 +209,7 @@ func TestDeleteWorkoutExercise(t *testing.T) {
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Press", nil, nil, userID)
 
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 	weID := we.ID
 
 	err := weRepo.DeleteWorkoutExercise(ctx, weID, userID)
@@ -248,7 +248,7 @@ func TestDeleteWorkoutExerciseOnDeleteWorkout(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Press", nil, nil, userID)
-	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, nil, nil, nil, userID)
+	we, _ := weRepo.CreateWorkoutExercise(ctx, workout.ID, exercise.ID, 0, nil, nil, userID)
 
 	err := workoutRepo.DeleteWorkout(ctx, workout.ID, userID)
 	if err != nil {

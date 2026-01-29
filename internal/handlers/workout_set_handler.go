@@ -15,7 +15,7 @@ import (
 )
 
 type WorkoutSetScanner interface {
-	CreateWorkoutSet(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, isCompleted bool, orderIndex *int, userID uuid.UUID) (*models.WorkoutSet, error)
+	CreateWorkoutSet(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, isCompleted bool, orderIndex int, userID uuid.UUID) (*models.WorkoutSet, error)
 	GetWorkoutSetByID(ctx context.Context, id uuid.UUID) (*models.WorkoutSet, error)
 	GetWorkoutSetsByWorkoutExerciseID(ctx context.Context, workoutExerciseID uuid.UUID) ([]*models.WorkoutSet, error)
 	UpdateWorkoutSet(ctx context.Context, workoutSetID uuid.UUID, userID uuid.UUID, updates models.UpdateWorkoutSetRequest) error
@@ -68,7 +68,7 @@ func (h *WorkoutSetHandler) AddSet(w http.ResponseWriter, r *http.Request) {
 		Weight      *float64 `json:"weight"`
 		Reps        *int     `json:"reps"`
 		IsCompleted bool     `json:"is_completed"`
-		OrderIndex  *int     `json:"order_index"`
+		OrderIndex  int      `json:"order_index"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

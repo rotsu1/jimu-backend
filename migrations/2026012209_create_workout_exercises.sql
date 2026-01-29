@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS public.workout_exercises (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     workout_id uuid REFERENCES public.workouts(id) ON DELETE CASCADE,
     exercise_id uuid REFERENCES public.exercises(id),
-    order_index integer,
+    order_index integer NOT NULL,
     memo text,
     rest_timer_seconds integer,
     created_at TIMESTAMPTZ DEFAULT now(),

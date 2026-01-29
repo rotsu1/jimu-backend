@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.workout_sets (
     weight numeric,
     reps integer,
     is_completed boolean DEFAULT false,
-    order_index integer,
+    order_index integer NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );

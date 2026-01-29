@@ -23,14 +23,14 @@ func TestCreateRoutineSet(t *testing.T) {
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Push Day")
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Bench Press", nil, nil, userID)
 	// Updated: pass userID
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 
 	weight := 100.0
 	reps := 10
 	orderIndex := 1
 
 	// Updated: pass userID
-	rs, err := rsRepo.CreateRoutineSet(ctx, re.ID, &weight, &reps, &orderIndex, userID)
+	rs, err := rsRepo.CreateRoutineSet(ctx, re.ID, &weight, &reps, orderIndex, userID)
 	if err != nil {
 		t.Fatalf("Failed to create routine set: %v", err)
 	}
@@ -59,10 +59,10 @@ func TestGetRoutineSetByID(t *testing.T) {
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Pull Day")
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Row", nil, nil, userID)
 	// Updated: pass userID
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 
 	// Updated: pass userID
-	created, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, nil, userID)
+	created, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, 0, userID)
 
 	rs, err := rsRepo.GetRoutineSetByID(ctx, created.ID)
 	if err != nil {
@@ -99,13 +99,13 @@ func TestGetRoutineSetsByRoutineExerciseID(t *testing.T) {
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Leg Day")
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Squat", nil, nil, userID)
 	// Updated: pass userID
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 
 	order1 := 2
 	order2 := 1
 	// Updated: pass userID
-	rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, &order1, userID)
-	rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, &order2, userID)
+	rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, order1, userID)
+	rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, order2, userID)
 
 	sets, err := rsRepo.GetRoutineSetsByRoutineExerciseID(ctx, re.ID)
 	if err != nil {
@@ -117,7 +117,7 @@ func TestGetRoutineSetsByRoutineExerciseID(t *testing.T) {
 	}
 
 	// Should be ordered by order_index ASC
-	if *sets[0].OrderIndex != 1 {
+	if sets[0].OrderIndex != 1 {
 		t.Errorf("Expected first set to have order_index 1")
 	}
 }
@@ -135,10 +135,10 @@ func TestUpdateRoutineSet(t *testing.T) {
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Arm Day")
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Curl", nil, nil, userID)
 	// Updated: pass userID
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 
 	// Updated: pass userID
-	rs, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, nil, userID)
+	rs, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, 0, userID)
 
 	newWeight := 25.0
 	newReps := 12
@@ -188,10 +188,10 @@ func TestDeleteRoutineSet(t *testing.T) {
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Full Body")
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Deadlift", nil, nil, userID)
 	// Updated: pass userID
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 
 	// Updated: pass userID
-	rs, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, nil, userID)
+	rs, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, 0, userID)
 	rsID := rs.ID
 
 	// Updated: pass userID
@@ -232,9 +232,9 @@ func TestDeleteRoutineSetOnDeleteRoutineExercise(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	routine, _ := routineRepo.CreateRoutine(ctx, userID, "Leg Day")
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Squat", nil, nil, userID)
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 
-	rs, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, nil, userID)
+	rs, _ := rsRepo.CreateRoutineSet(ctx, re.ID, nil, nil, 0, userID)
 	rsID := rs.ID
 
 	err := reRepo.DeleteRoutineExercise(ctx, re.ID, userID)

@@ -15,13 +15,13 @@ import (
 // --- Mocks ---
 
 type mockWorkoutImageRepo struct {
-	CreateWorkoutImageFunc          func(ctx context.Context, workoutID uuid.UUID, storagePath string, displayOrder *int, userID uuid.UUID) (*models.WorkoutImage, error)
+	CreateWorkoutImageFunc          func(ctx context.Context, workoutID uuid.UUID, storagePath string, displayOrder int, userID uuid.UUID) (*models.WorkoutImage, error)
 	GetWorkoutImageByIDFunc         func(ctx context.Context, id uuid.UUID) (*models.WorkoutImage, error)
 	GetWorkoutImagesByWorkoutIDFunc func(ctx context.Context, workoutID uuid.UUID) ([]*models.WorkoutImage, error)
 	DeleteWorkoutImageFunc          func(ctx context.Context, workoutImageID uuid.UUID, userID uuid.UUID) error
 }
 
-func (m *mockWorkoutImageRepo) CreateWorkoutImage(ctx context.Context, workoutID uuid.UUID, storagePath string, displayOrder *int, userID uuid.UUID) (*models.WorkoutImage, error) {
+func (m *mockWorkoutImageRepo) CreateWorkoutImage(ctx context.Context, workoutID uuid.UUID, storagePath string, displayOrder int, userID uuid.UUID) (*models.WorkoutImage, error) {
 	if m.CreateWorkoutImageFunc != nil {
 		return m.CreateWorkoutImageFunc(ctx, workoutID, storagePath, displayOrder, userID)
 	}

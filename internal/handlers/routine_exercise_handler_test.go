@@ -17,14 +17,14 @@ import (
 // --- Mocks ---
 
 type mockRoutineExerciseRepo struct {
-	CreateRoutineExerciseFunc          func(ctx context.Context, routineID uuid.UUID, exerciseID uuid.UUID, orderIndex *int, restTimerSeconds *int, memo *string, userID uuid.UUID) (*models.RoutineExercise, error)
+	CreateRoutineExerciseFunc          func(ctx context.Context, routineID uuid.UUID, exerciseID uuid.UUID, orderIndex int, restTimerSeconds *int, memo *string, userID uuid.UUID) (*models.RoutineExercise, error)
 	GetRoutineExerciseByIDFunc         func(ctx context.Context, id uuid.UUID) (*models.RoutineExercise, error)
 	GetRoutineExercisesByRoutineIDFunc func(ctx context.Context, routineID uuid.UUID) ([]*models.RoutineExercise, error)
 	UpdateRoutineExerciseFunc          func(ctx context.Context, id uuid.UUID, updates models.UpdateRoutineExerciseRequest, userID uuid.UUID) error
 	DeleteRoutineExerciseFunc          func(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 
-func (m *mockRoutineExerciseRepo) CreateRoutineExercise(ctx context.Context, routineID uuid.UUID, exerciseID uuid.UUID, orderIndex *int, restTimerSeconds *int, memo *string, userID uuid.UUID) (*models.RoutineExercise, error) {
+func (m *mockRoutineExerciseRepo) CreateRoutineExercise(ctx context.Context, routineID uuid.UUID, exerciseID uuid.UUID, orderIndex int, restTimerSeconds *int, memo *string, userID uuid.UUID) (*models.RoutineExercise, error) {
 	if m.CreateRoutineExerciseFunc != nil {
 		return m.CreateRoutineExerciseFunc(ctx, routineID, exerciseID, orderIndex, restTimerSeconds, memo, userID)
 	}

@@ -23,7 +23,7 @@ func TestCreateWorkoutImage(t *testing.T) {
 	storagePath := "/images/workout123.jpg"
 	displayOrder := 1
 
-	wi, err := wiRepo.CreateWorkoutImage(ctx, workout.ID, storagePath, &displayOrder, userID)
+	wi, err := wiRepo.CreateWorkoutImage(ctx, workout.ID, storagePath, displayOrder, userID)
 	if err != nil {
 		t.Fatalf("Failed to create workout image: %v", err)
 	}
@@ -34,8 +34,8 @@ func TestCreateWorkoutImage(t *testing.T) {
 	if wi.StoragePath != storagePath {
 		t.Errorf("StoragePath mismatch: got %v, want %v", wi.StoragePath, storagePath)
 	}
-	if *wi.DisplayOrder != displayOrder {
-		t.Errorf("DisplayOrder mismatch: got %v, want %v", *wi.DisplayOrder, displayOrder)
+	if wi.DisplayOrder != displayOrder {
+		t.Errorf("DisplayOrder mismatch: got %v, want %v", wi.DisplayOrder, displayOrder)
 	}
 }
 
@@ -46,7 +46,7 @@ func TestCreateWorkoutImageNotFoundWorkout(t *testing.T) {
 	ctx := context.Background()
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
-	_, err := wiRepo.CreateWorkoutImage(ctx, uuid.New(), "/path/to/image.jpg", nil, userID)
+	_, err := wiRepo.CreateWorkoutImage(ctx, uuid.New(), "/path/to/image.jpg", 0, userID)
 	if !errors.Is(err, ErrReferenceViolation) {
 		t.Errorf("Expected ErrReferenceViolation, but got %v", err)
 	}
@@ -62,7 +62,7 @@ func TestGetWorkoutImageByID(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 
-	created, _ := wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/image.jpg", nil, userID)
+	created, _ := wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/image.jpg", 0, userID)
 
 	wi, err := wiRepo.GetWorkoutImageByID(ctx, created.ID)
 	if err != nil {
@@ -98,8 +98,8 @@ func TestGetWorkoutImagesByWorkoutID(t *testing.T) {
 
 	order1 := 2
 	order2 := 1
-	wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/image1.jpg", &order1, userID)
-	wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/image2.jpg", &order2, userID)
+	wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/image1.jpg", order1, userID)
+	wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/image2.jpg", order2, userID)
 
 	images, err := wiRepo.GetWorkoutImagesByWorkoutID(ctx, workout.ID)
 	if err != nil {
@@ -111,7 +111,7 @@ func TestGetWorkoutImagesByWorkoutID(t *testing.T) {
 	}
 
 	// Should be ordered by display_order ASC
-	if *images[0].DisplayOrder != 1 {
+	if images[0].DisplayOrder != 1 {
 		t.Errorf("Expected first image to have display_order 1")
 	}
 }
@@ -141,7 +141,7 @@ func TestDeleteWorkoutImage(t *testing.T) {
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
 
-	wi, _ := wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/delete.jpg", nil, userID)
+	wi, _ := wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/delete.jpg", 0, userID)
 	wiID := wi.ID
 
 	err := wiRepo.DeleteWorkoutImage(ctx, wiID, userID)
@@ -191,7 +191,7 @@ func TestDeleteWorkoutImageOnDeleteWorkout(t *testing.T) {
 
 	userID, _, _ := testutil.InsertProfile(ctx, db, "testuser")
 	workout, _ := workoutRepo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
-	wi, _ := wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/delete.jpg", nil, userID)
+	wi, _ := wiRepo.CreateWorkoutImage(ctx, workout.ID, "/path/to/delete.jpg", 0, userID)
 	err := workoutRepo.DeleteWorkout(ctx, workout.ID, userID)
 	if err != nil {
 		t.Fatalf("Failed to delete workout: %v", err)

@@ -31,7 +31,7 @@ func TestCreateRoutineExercise(t *testing.T) {
 		ctx,
 		routine.ID,
 		exercise.ID,
-		&orderIndex,
+		orderIndex,
 		&restTimer,
 		&memo,
 		userID,
@@ -43,8 +43,8 @@ func TestCreateRoutineExercise(t *testing.T) {
 	if re.ID == uuid.Nil {
 		t.Error("RoutineExercise ID should not be nil")
 	}
-	if *re.OrderIndex != orderIndex {
-		t.Errorf("OrderIndex mismatch: got %v, want %v", *re.OrderIndex, orderIndex)
+	if re.OrderIndex != orderIndex {
+		t.Errorf("OrderIndex mismatch: got %v, want %v", re.OrderIndex, orderIndex)
 	}
 	if *re.Memo != memo {
 		t.Errorf("Memo mismatch: got %v, want %v", *re.Memo, memo)
@@ -68,7 +68,7 @@ func TestGetRoutineExerciseByID(t *testing.T) {
 		ctx,
 		routine.ID,
 		exercise.ID,
-		nil,
+		0,
 		nil,
 		nil,
 		userID,
@@ -112,8 +112,8 @@ func TestGetRoutineExercisesByRoutineID(t *testing.T) {
 	order1 := 2
 	order2 := 1
 	// Updated: pass userID
-	reRepo.CreateRoutineExercise(ctx, routine.ID, exercise1.ID, &order1, nil, nil, userID)
-	reRepo.CreateRoutineExercise(ctx, routine.ID, exercise2.ID, &order2, nil, nil, userID)
+	reRepo.CreateRoutineExercise(ctx, routine.ID, exercise1.ID, order1, nil, nil, userID)
+	reRepo.CreateRoutineExercise(ctx, routine.ID, exercise2.ID, order2, nil, nil, userID)
 
 	exercises, err := reRepo.GetRoutineExercisesByRoutineID(ctx, routine.ID)
 	if err != nil {
@@ -143,7 +143,7 @@ func TestUpdateRoutineExercise(t *testing.T) {
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Incline Press", nil, nil, userID)
 
 	// Updated: pass userID
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 
 	newMemo := "Updated memo"
 	newOrder := 5
@@ -160,8 +160,8 @@ func TestUpdateRoutineExercise(t *testing.T) {
 	if *updated.Memo != newMemo {
 		t.Errorf("Memo was not updated: got %v, want %v", *updated.Memo, newMemo)
 	}
-	if *updated.OrderIndex != newOrder {
-		t.Errorf("OrderIndex was not updated: got %v, want %v", *updated.OrderIndex, newOrder)
+	if updated.OrderIndex != newOrder {
+		t.Errorf("OrderIndex was not updated: got %v, want %v", updated.OrderIndex, newOrder)
 	}
 }
 
@@ -198,7 +198,7 @@ func TestDeleteRoutineExercise(t *testing.T) {
 	exercise, _ := exerciseRepo.CreateExercise(ctx, &userID, "Pullup", nil, nil, userID)
 
 	// Updated: pass userID
-	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, nil, nil, nil, userID)
+	re, _ := reRepo.CreateRoutineExercise(ctx, routine.ID, exercise.ID, 0, nil, nil, userID)
 	reID := re.ID
 
 	// Updated: pass userID

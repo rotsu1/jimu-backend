@@ -28,7 +28,7 @@ func (r *RoutineSetRepository) CreateRoutineSet(
 	routineExerciseID uuid.UUID,
 	weight *float64,
 	reps *int,
-	orderIndex *int,
+	orderIndex int,
 	userID uuid.UUID,
 ) (*models.RoutineSet, error) {
 	var rs models.RoutineSet

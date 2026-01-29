@@ -16,14 +16,14 @@ import (
 // --- Mocks ---
 
 type mockRoutineSetRepo struct {
-	CreateRoutineSetFunc                  func(ctx context.Context, routineExerciseID uuid.UUID, weight *float64, reps *int, orderIndex *int, userID uuid.UUID) (*models.RoutineSet, error)
+	CreateRoutineSetFunc                  func(ctx context.Context, routineExerciseID uuid.UUID, weight *float64, reps *int, orderIndex int, userID uuid.UUID) (*models.RoutineSet, error)
 	GetRoutineSetByIDFunc                 func(ctx context.Context, id uuid.UUID) (*models.RoutineSet, error)
 	GetRoutineSetsByRoutineExerciseIDFunc func(ctx context.Context, routineExerciseID uuid.UUID) ([]*models.RoutineSet, error)
 	UpdateRoutineSetFunc                  func(ctx context.Context, id uuid.UUID, updates models.UpdateRoutineSetRequest, userID uuid.UUID) error
 	DeleteRoutineSetFunc                  func(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 
-func (m *mockRoutineSetRepo) CreateRoutineSet(ctx context.Context, routineExerciseID uuid.UUID, weight *float64, reps *int, orderIndex *int, userID uuid.UUID) (*models.RoutineSet, error) {
+func (m *mockRoutineSetRepo) CreateRoutineSet(ctx context.Context, routineExerciseID uuid.UUID, weight *float64, reps *int, orderIndex int, userID uuid.UUID) (*models.RoutineSet, error) {
 	if m.CreateRoutineSetFunc != nil {
 		return m.CreateRoutineSetFunc(ctx, routineExerciseID, weight, reps, orderIndex, userID)
 	}

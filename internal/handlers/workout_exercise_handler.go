@@ -15,7 +15,7 @@ import (
 )
 
 type WorkoutExerciseScanner interface {
-	CreateWorkoutExercise(ctx context.Context, workoutID uuid.UUID, exerciseID uuid.UUID, orderIndex *int, memo *string, restTimerSeconds *int, userID uuid.UUID) (*models.WorkoutExercise, error)
+	CreateWorkoutExercise(ctx context.Context, workoutID uuid.UUID, exerciseID uuid.UUID, orderIndex int, memo *string, restTimerSeconds *int, userID uuid.UUID) (*models.WorkoutExercise, error)
 	GetWorkoutExerciseByID(ctx context.Context, id uuid.UUID) (*models.WorkoutExercise, error)
 	GetWorkoutExercisesByWorkoutID(ctx context.Context, workoutID uuid.UUID) ([]*models.WorkoutExercise, error)
 	UpdateWorkoutExercise(ctx context.Context, workoutExerciseID uuid.UUID, updates models.UpdateWorkoutExerciseRequest, userID uuid.UUID) error
@@ -64,7 +64,7 @@ func (h *WorkoutExerciseHandler) AddExercise(w http.ResponseWriter, r *http.Requ
 
 	var req struct {
 		ExerciseID       string  `json:"exercise_id"`
-		OrderIndex       *int    `json:"order_index"`
+		OrderIndex       int     `json:"order_index"`
 		Memo             *string `json:"memo"`
 		RestTimerSeconds *int    `json:"rest_timer_seconds"`
 	}

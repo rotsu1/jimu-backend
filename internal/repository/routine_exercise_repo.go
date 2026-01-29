@@ -27,7 +27,7 @@ func (r *RoutineExerciseRepository) CreateRoutineExercise(
 	ctx context.Context,
 	routineID uuid.UUID,
 	exerciseID uuid.UUID,
-	orderIndex *int,
+	orderIndex int,
 	restTimerSeconds *int,
 	memo *string,
 	userID uuid.UUID,
@@ -135,11 +135,7 @@ func (r *RoutineExerciseRepository) UpdateRoutineExercise(
 
 	if updates.OrderIndex != nil {
 		sets = append(sets, fmt.Sprintf("order_index = $%d", i))
-		if *updates.OrderIndex == 0 {
-			args = append(args, nil)
-		} else {
-			args = append(args, *updates.OrderIndex)
-		}
+		args = append(args, *updates.OrderIndex)
 		i++
 	}
 	if updates.RestTimerSeconds != nil {

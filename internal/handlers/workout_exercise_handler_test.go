@@ -15,14 +15,14 @@ import (
 // --- Mocks ---
 
 type mockWorkoutExerciseRepo struct {
-	CreateWorkoutExerciseFunc          func(ctx context.Context, workoutID uuid.UUID, exerciseID uuid.UUID, orderIndex *int, memo *string, restTimerSeconds *int, userID uuid.UUID) (*models.WorkoutExercise, error)
+	CreateWorkoutExerciseFunc          func(ctx context.Context, workoutID uuid.UUID, exerciseID uuid.UUID, orderIndex int, memo *string, restTimerSeconds *int, userID uuid.UUID) (*models.WorkoutExercise, error)
 	GetWorkoutExerciseByIDFunc         func(ctx context.Context, id uuid.UUID) (*models.WorkoutExercise, error)
 	GetWorkoutExercisesByWorkoutIDFunc func(ctx context.Context, workoutID uuid.UUID) ([]*models.WorkoutExercise, error)
 	UpdateWorkoutExerciseFunc          func(ctx context.Context, workoutExerciseID uuid.UUID, updates models.UpdateWorkoutExerciseRequest, userID uuid.UUID) error
 	DeleteWorkoutExerciseFunc          func(ctx context.Context, workoutExerciseID uuid.UUID, userID uuid.UUID) error
 }
 
-func (m *mockWorkoutExerciseRepo) CreateWorkoutExercise(ctx context.Context, workoutID uuid.UUID, exerciseID uuid.UUID, orderIndex *int, memo *string, restTimerSeconds *int, userID uuid.UUID) (*models.WorkoutExercise, error) {
+func (m *mockWorkoutExerciseRepo) CreateWorkoutExercise(ctx context.Context, workoutID uuid.UUID, exerciseID uuid.UUID, orderIndex int, memo *string, restTimerSeconds *int, userID uuid.UUID) (*models.WorkoutExercise, error) {
 	if m.CreateWorkoutExerciseFunc != nil {
 		return m.CreateWorkoutExerciseFunc(ctx, workoutID, exerciseID, orderIndex, memo, restTimerSeconds, userID)
 	}

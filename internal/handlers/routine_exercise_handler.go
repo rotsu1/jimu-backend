@@ -15,7 +15,7 @@ import (
 )
 
 type RoutineExerciseScanner interface {
-	CreateRoutineExercise(ctx context.Context, routineID uuid.UUID, exerciseID uuid.UUID, orderIndex *int, restTimerSeconds *int, memo *string, userID uuid.UUID) (*models.RoutineExercise, error)
+	CreateRoutineExercise(ctx context.Context, routineID uuid.UUID, exerciseID uuid.UUID, orderIndex int, restTimerSeconds *int, memo *string, userID uuid.UUID) (*models.RoutineExercise, error)
 	GetRoutineExerciseByID(ctx context.Context, id uuid.UUID) (*models.RoutineExercise, error)
 	GetRoutineExercisesByRoutineID(ctx context.Context, routineID uuid.UUID) ([]*models.RoutineExercise, error)
 	UpdateRoutineExercise(ctx context.Context, id uuid.UUID, updates models.UpdateRoutineExerciseRequest, userID uuid.UUID) error
@@ -59,7 +59,7 @@ func (h *RoutineExerciseHandler) AddExercise(w http.ResponseWriter, r *http.Requ
 
 	var req struct {
 		ExerciseID       string  `json:"exercise_id"`
-		OrderIndex       *int    `json:"order_index"`
+		OrderIndex       int     `json:"order_index"`
 		RestTimerSeconds *int    `json:"rest_timer_seconds"`
 		Memo             *string `json:"memo"`
 	}

@@ -29,7 +29,7 @@ func (r *WorkoutSetRepository) CreateWorkoutSet(
 	weight *float64,
 	reps *int,
 	isCompleted bool,
-	orderIndex *int,
+	orderIndex int,
 	userID uuid.UUID,
 ) (*models.WorkoutSet, error) {
 	var ws models.WorkoutSet

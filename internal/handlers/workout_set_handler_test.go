@@ -15,14 +15,14 @@ import (
 // --- Mocks ---
 
 type mockWorkoutSetRepo struct {
-	CreateWorkoutSetFunc                  func(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, isCompleted bool, orderIndex *int, userID uuid.UUID) (*models.WorkoutSet, error)
+	CreateWorkoutSetFunc                  func(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, isCompleted bool, orderIndex int, userID uuid.UUID) (*models.WorkoutSet, error)
 	GetWorkoutSetByIDFunc                 func(ctx context.Context, id uuid.UUID) (*models.WorkoutSet, error)
 	GetWorkoutSetsByWorkoutExerciseIDFunc func(ctx context.Context, workoutExerciseID uuid.UUID) ([]*models.WorkoutSet, error)
 	UpdateWorkoutSetFunc                  func(ctx context.Context, workoutSetID uuid.UUID, userID uuid.UUID, updates models.UpdateWorkoutSetRequest) error
 	DeleteWorkoutSetFunc                  func(ctx context.Context, workoutSetID uuid.UUID, userID uuid.UUID) error
 }
 
-func (m *mockWorkoutSetRepo) CreateWorkoutSet(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, isCompleted bool, orderIndex *int, userID uuid.UUID) (*models.WorkoutSet, error) {
+func (m *mockWorkoutSetRepo) CreateWorkoutSet(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, isCompleted bool, orderIndex int, userID uuid.UUID) (*models.WorkoutSet, error) {
 	if m.CreateWorkoutSetFunc != nil {
 		return m.CreateWorkoutSetFunc(ctx, workoutExerciseID, weight, reps, isCompleted, orderIndex, userID)
 	}
