@@ -433,21 +433,20 @@ func (h *AuthHandler) UnlinkIdentity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Request Decoding
-	var req struct {
-		Provider string `json:"provider"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) < 3 {
+		http.Error(w, "Invalid URL path", http.StatusBadRequest)
 		return
 	}
+	provider := parts[len(parts)-1]
 
-	if req.Provider == "" {
+	if provider == "" {
 		http.Error(w, "Provider is required", http.StatusBadRequest)
 		return
 	}
 
 	// 3. Repo Call
-	err = h.UserRepo.DeleteIdentity(r.Context(), userID, req.Provider)
+	err = h.UserRepo.DeleteIdentity(r.Context(), userID, provider)
 
 	// 4. Error Mapping
 	if err != nil {

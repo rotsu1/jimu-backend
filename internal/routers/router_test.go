@@ -77,7 +77,7 @@ func TestJimuRouter_Routing(t *testing.T) {
 
 		// Auth Identities
 		{"Get My Identities - No Token", "GET", "/auth/identities", http.StatusUnauthorized},
-		{"Unlink Identity - No Token", "DELETE", "/auth/identities", http.StatusUnauthorized},
+		{"Unlink Identity - No Token", "DELETE", "/auth/identities/google", http.StatusUnauthorized},
 		{"Auth Identities - Wrong Method POST", "POST", "/auth/identities", http.StatusNotFound},
 
 		// =====================================================================

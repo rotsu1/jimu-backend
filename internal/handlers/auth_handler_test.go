@@ -556,8 +556,7 @@ func TestGetMyIdentities(t *testing.T) {
 func TestUnlinkIdentity(t *testing.T) {
 	h := NewAuthHandler(&mockUserRepo{}, &mockSessionRepo{}, &mockValidator{})
 
-	body := `{"provider": "google"}`
-	req := httptest.NewRequest("DELETE", "/auth/identities", strings.NewReader(body))
+	req := httptest.NewRequest("DELETE", "/auth/identities/google", nil)
 
 	uid := uuid.New().String()
 	req = testutils.InjectUserID(req, uid)

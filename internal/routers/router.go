@@ -83,13 +83,20 @@ func (jr *JimuRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.HasPrefix(path, "/auth/identities") {
-		if method == "GET" {
-			authMW(http.HandlerFunc(jr.AuthHandler.GetMyIdentities)).ServeHTTP(w, r)
-			return
+		parts := strings.Split(strings.Trim(path, "/"), "/")
+		// /auth/identities
+		if len(parts) == 2 {
+			if method == "GET" {
+				authMW(http.HandlerFunc(jr.AuthHandler.GetMyIdentities)).ServeHTTP(w, r)
+				return
+			}
 		}
-		if method == "DELETE" {
-			authMW(http.HandlerFunc(jr.AuthHandler.UnlinkIdentity)).ServeHTTP(w, r)
-			return
+		// /auth/identities/{provider}
+		if len(parts) == 3 {
+			if method == "DELETE" {
+				authMW(http.HandlerFunc(jr.AuthHandler.UnlinkIdentity)).ServeHTTP(w, r)
+				return
+			}
 		}
 	}
 
