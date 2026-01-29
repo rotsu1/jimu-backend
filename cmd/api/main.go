@@ -43,7 +43,9 @@ func main() {
 	commentLikeRepo := repository.NewCommentLikeRepository(pool)
 	routineRepo := repository.NewRoutineRepository(pool)
 	routineExerciseRepo := repository.NewRoutineExerciseRepository(pool)
+
 	routineSetRepo := repository.NewRoutineSetRepository(pool)
+	healthRepo := repository.NewHealthRepository(pool)
 
 	// 3. Initialize the Handler (Injecting the Repo)
 	authHandler := handlers.NewAuthHandler(userRepo, userSessionRepo, &handlers.GoogleValidator{})
@@ -65,6 +67,7 @@ func main() {
 	routineHandler := handlers.NewRoutineHandler(routineRepo)
 	routineExerciseHandler := handlers.NewRoutineExerciseHandler(routineExerciseRepo)
 	routineSetHandler := handlers.NewRoutineSetHandler(routineSetRepo)
+	healthHandler := handlers.NewHealthHandler(healthRepo)
 
 	_ = godotenv.Load()
 	JWTSecret := os.Getenv("JWTSecret")
@@ -93,6 +96,7 @@ func main() {
 		RoutineHandler:              routineHandler,
 		RoutineExerciseHandler:      routineExerciseHandler,
 		RoutineSetHandler:           routineSetHandler,
+		HealthHandler:               healthHandler,
 		JWTSecret:                   JWTSecret,
 	}
 

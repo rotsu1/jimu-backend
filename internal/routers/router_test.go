@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,12 +9,19 @@ import (
 	"github.com/rotsu1/jimu-backend/internal/handlers"
 )
 
+// explicit mock for router tests
+type mockHealthRepo struct{}
+
+func (m *mockHealthRepo) Ping(ctx context.Context) error { return nil }
+
 // TestJimuRouter_Routing covers all routes defined in JimuRouter.
 // For private routes: verifies 401 Unauthorized when no Bearer token is provided.
 // For all routes: verifies 404 Not Found when wrong HTTP method is used.
 func TestJimuRouter_Routing(t *testing.T) {
 	// Sample UUID for path parameters
 	const testUUID = "00000000-0000-0000-0000-000000000001"
+
+	healthHandler := handlers.NewHealthHandler(&mockHealthRepo{})
 
 	// Initialize router with nil handlers (we're testing routing, not handler logic)
 	jr := &JimuRouter{
@@ -36,6 +44,7 @@ func TestJimuRouter_Routing(t *testing.T) {
 		RoutineHandler:              &handlers.RoutineHandler{},
 		RoutineExerciseHandler:      &handlers.RoutineExerciseHandler{},
 		RoutineSetHandler:           &handlers.RoutineSetHandler{},
+		HealthHandler:               healthHandler,
 		JWTSecret:                   "test-secret",
 	}
 
@@ -57,6 +66,10 @@ func TestJimuRouter_Routing(t *testing.T) {
 		{"Auth Refresh - POST", "POST", "/auth/refresh", http.StatusBadRequest}, // No body, but route matched
 		{"Auth Refresh - Wrong Method GET", "GET", "/auth/refresh", http.StatusNotFound},
 		{"Auth Refresh - Wrong Method PUT", "PUT", "/auth/refresh", http.StatusNotFound},
+
+		// Health (Public)
+		{"Health Check - GET", "GET", "/health", http.StatusOK},
+		{"Health Check - Wrong Method POST", "POST", "/health", http.StatusNotFound},
 
 		// =====================================================================
 		// PRIVATE ROUTES - AUTH DOMAIN
@@ -299,6 +312,7 @@ func TestJimuRouter_Routing(t *testing.T) {
 // TestJimuRouter_PathParsingWithVariousUUIDs ensures path parsing works correctly
 // with different valid UUID formats in the path.
 func TestJimuRouter_PathParsingWithVariousUUIDs(t *testing.T) {
+	healthHandler := handlers.NewHealthHandler(&mockHealthRepo{})
 	jr := &JimuRouter{
 		AuthHandler:                 &handlers.AuthHandler{},
 		UserSettingsHandler:         &handlers.UserSettingsHandler{},
@@ -319,6 +333,7 @@ func TestJimuRouter_PathParsingWithVariousUUIDs(t *testing.T) {
 		RoutineHandler:              &handlers.RoutineHandler{},
 		RoutineExerciseHandler:      &handlers.RoutineExerciseHandler{},
 		RoutineSetHandler:           &handlers.RoutineSetHandler{},
+		HealthHandler:               healthHandler,
 		JWTSecret:                   "test-secret",
 	}
 
@@ -365,6 +380,7 @@ func TestJimuRouter_PathParsingWithVariousUUIDs(t *testing.T) {
 // TestJimuRouter_SubResourceIsolation ensures sub-resource routes don't collide
 // with parent routes.
 func TestJimuRouter_SubResourceIsolation(t *testing.T) {
+	healthHandler := handlers.NewHealthHandler(&mockHealthRepo{})
 	jr := &JimuRouter{
 		AuthHandler:                 &handlers.AuthHandler{},
 		UserSettingsHandler:         &handlers.UserSettingsHandler{},
@@ -385,6 +401,7 @@ func TestJimuRouter_SubResourceIsolation(t *testing.T) {
 		RoutineHandler:              &handlers.RoutineHandler{},
 		RoutineExerciseHandler:      &handlers.RoutineExerciseHandler{},
 		RoutineSetHandler:           &handlers.RoutineSetHandler{},
+		HealthHandler:               healthHandler,
 		JWTSecret:                   "test-secret",
 	}
 

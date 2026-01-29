@@ -28,6 +28,7 @@ type JimuRouter struct {
 	RoutineHandler              *handlers.RoutineHandler
 	RoutineExerciseHandler      *handlers.RoutineExerciseHandler
 	RoutineSetHandler           *handlers.RoutineSetHandler
+	HealthHandler               *handlers.HealthHandler
 	JWTSecret                   string
 }
 
@@ -45,6 +46,11 @@ func (jr *JimuRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/auth/refresh":
 		if method == "POST" {
 			jr.AuthHandler.RefreshToken(w, r)
+			return
+		}
+	case "/health":
+		if method == "GET" {
+			jr.HealthHandler.HealthCheck(w, r)
 			return
 		}
 	}
