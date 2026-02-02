@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -119,23 +118,10 @@ func (h *UserDeviceHandler) DeleteDevice(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) > 0 {
-			lastPart := parts[len(parts)-1]
-			if _, err := uuid.Parse(lastPart); err == nil {
-				targetIDStr = lastPart
-			}
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing device ID", http.StatusBadRequest)
-		return
-	}
-	deviceID, err := uuid.Parse(targetIDStr)
+	// Path param only: /user-devices/{id}
+	deviceID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid device ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing device ID", http.StatusBadRequest)
 		return
 	}
 

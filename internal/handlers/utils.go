@@ -1,21 +1,42 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
 )
 
-// GetIDFromRequest extracts a UUID from the request, preferring the last
-// path segment if it's a valid UUID, falling back to query param "id".
-func GetIDFromRequest(r *http.Request) (uuid.UUID, error) {
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) > 0 {
-		lastPart := parts[len(parts)-1]
-		if id, err := uuid.Parse(lastPart); err == nil {
-			return id, nil
-		}
+var ErrMissingPathParam = errors.New("missing path param")
+
+func pathParts(r *http.Request) []string {
+	p := strings.Trim(r.URL.Path, "/")
+	if p == "" {
+		return []string{}
 	}
-	return uuid.Parse(r.URL.Query().Get("id"))
+	return strings.Split(p, "/")
+}
+
+// GetUUIDPathParam extracts a UUID from the request path at a specific segment
+// index after trimming leading/trailing slashes.
+//
+// Example: "/workouts/{id}/likes" -> parts: ["workouts","{id}","likes"]
+// GetUUIDPathParam(r, 1) returns the workout UUID.
+func GetUUIDPathParam(r *http.Request, idx int) (uuid.UUID, error) {
+	parts := pathParts(r)
+	if idx < 0 || idx >= len(parts) {
+		return uuid.Nil, ErrMissingPathParam
+	}
+	return uuid.Parse(parts[idx])
+}
+
+// GetIDFromRequest extracts a UUID from the request path's last segment.
+// Per handler rule 2.1, resource identifiers MUST come from the path (not query).
+func GetIDFromRequest(r *http.Request) (uuid.UUID, error) {
+	parts := pathParts(r)
+	if len(parts) == 0 {
+		return uuid.Nil, ErrMissingPathParam
+	}
+	return uuid.Parse(parts[len(parts)-1])
 }

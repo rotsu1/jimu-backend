@@ -72,7 +72,7 @@ func TestRegisterDevice_Success(t *testing.T) {
 	h := NewUserDeviceHandler(&mockUserDeviceRepo{})
 
 	body := `{"fcm_token": "token123", "device_type": "ios"}`
-	req := httptest.NewRequest("POST", "/devices", strings.NewReader(body))
+	req := httptest.NewRequest("POST", "/user-devices", strings.NewReader(body))
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -86,7 +86,7 @@ func TestRegisterDevice_Success(t *testing.T) {
 func TestListDevices_Success(t *testing.T) {
 	h := NewUserDeviceHandler(&mockUserDeviceRepo{})
 
-	req := httptest.NewRequest("GET", "/devices", nil)
+	req := httptest.NewRequest("GET", "/user-devices", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -100,7 +100,7 @@ func TestListDevices_Success(t *testing.T) {
 func TestDeleteDevice_Success(t *testing.T) {
 	h := NewUserDeviceHandler(&mockUserDeviceRepo{})
 
-	req := httptest.NewRequest("DELETE", "/devices?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/user-devices/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -119,7 +119,7 @@ func TestDeleteDevice_NotFound(t *testing.T) {
 	}
 	h := NewUserDeviceHandler(mockRepo)
 
-	req := httptest.NewRequest("DELETE", "/devices?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/user-devices/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

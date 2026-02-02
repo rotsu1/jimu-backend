@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -43,24 +42,10 @@ func (h *WorkoutSetHandler) AddSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Request Decoding
-	// Workout Exercise ID from path or query?
-	// Assuming query param "workout_exercise_id"
-	workoutExerciseIDStr := r.URL.Query().Get("workout_exercise_id")
-	if workoutExerciseIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// /workout-exercises/WEID/sets
-		if len(parts) >= 4 && parts[1] == "workout-exercises" && parts[3] == "sets" {
-			workoutExerciseIDStr = parts[2]
-		}
-	}
-	if workoutExerciseIDStr == "" {
-		http.Error(w, "Missing workout exercise ID", http.StatusBadRequest)
-		return
-	}
-	workoutExerciseID, err := uuid.Parse(workoutExerciseIDStr)
+	// 2. ID Extraction (path param only: /workout-exercises/{id}/sets)
+	workoutExerciseID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid workout exercise ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout exercise ID", http.StatusBadRequest)
 		return
 	}
 
@@ -108,21 +93,10 @@ func (h *WorkoutSetHandler) RemoveSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// /workout-sets/ID
-		if len(parts) >= 3 && parts[1] == "workout-sets" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing set ID", http.StatusBadRequest)
-		return
-	}
-	setID, err := uuid.Parse(targetIDStr)
+	// Path param only: /workout-sets/{id}
+	setID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid set ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing set ID", http.StatusBadRequest)
 		return
 	}
 
@@ -158,20 +132,10 @@ func (h *WorkoutSetHandler) UpdateSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 3 && parts[1] == "workout-sets" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing set ID", http.StatusBadRequest)
-		return
-	}
-	setID, err := uuid.Parse(targetIDStr)
+	// Path param only: /workout-sets/{id}
+	setID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid set ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing set ID", http.StatusBadRequest)
 		return
 	}
 

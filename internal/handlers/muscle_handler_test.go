@@ -77,7 +77,7 @@ func TestListMuscles_Success(t *testing.T) {
 func TestGetMuscle_Success(t *testing.T) {
 	h := NewMuscleHandler(&mockMuscleRepo{})
 
-	req := httptest.NewRequest("GET", "/muscles?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("GET", "/muscles/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -106,7 +106,7 @@ func TestCreateMuscle_Success(t *testing.T) {
 func TestDeleteMuscle_Success(t *testing.T) {
 	h := NewMuscleHandler(&mockMuscleRepo{})
 
-	req := httptest.NewRequest("DELETE", "/muscles?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/muscles/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -125,7 +125,7 @@ func TestDeleteMuscle_Unauthorized(t *testing.T) {
 	}
 	h := NewMuscleHandler(mockRepo)
 
-	req := httptest.NewRequest("DELETE", "/muscles?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/muscles/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

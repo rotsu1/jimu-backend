@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -45,29 +44,10 @@ func (h *RoutineSetHandler) AddSet(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Request Decoding
 	// We need Routine Exercise ID.
-	// Path: /routine-exercises/{id}/sets ?
-	// Or /routines/{id}/exercises/{eid}/sets ?
-	// Assuming /routine-exercises/{id}/sets for simplicitly or nested?
-	// Based on Plan/Previous handlers, if we deleted exercise via /routines/{id}/exercises/{eid}, maybe sets are similar?
-	// But `routine_id` isn't strictly needed for creating a set if we have `routine_exercise_id`.
-	// Let's rely on query param `routine_exercise_id` if path is tricky or path parsing if structured.
-	// Example: POST /routine-exercises/{id}/sets
-
-	routineExerciseIDStr := r.URL.Query().Get("routine_exercise_id")
-	if routineExerciseIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// Expect /routine-exercises/ID/sets
-		if len(parts) >= 4 && parts[1] == "routine-exercises" && parts[3] == "sets" {
-			routineExerciseIDStr = parts[2]
-		}
-	}
-	if routineExerciseIDStr == "" {
-		http.Error(w, "Missing routine exercise ID", http.StatusBadRequest)
-		return
-	}
-	routineExerciseID, err := uuid.Parse(routineExerciseIDStr)
+	// Path param only: /routine-exercises/{id}/sets
+	routineExerciseID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid routine exercise ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing routine exercise ID", http.StatusBadRequest)
 		return
 	}
 
@@ -115,24 +95,10 @@ func (h *RoutineSetHandler) RemoveSet(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Request Decoding
 	// Set ID
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// Expect /routine-sets/ID
-		// or /routine-exercises/EID/sets/SID
-		if len(parts) >= 3 && parts[1] == "routine-sets" {
-			targetIDStr = parts[2]
-		} else if len(parts) >= 5 && parts[3] == "sets" {
-			targetIDStr = parts[4] // /.../sets/ID
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing set ID", http.StatusBadRequest)
-		return
-	}
-	setID, err := uuid.Parse(targetIDStr)
+	// Path param only: /routine-sets/{id}
+	setID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid set ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing set ID", http.StatusBadRequest)
 		return
 	}
 

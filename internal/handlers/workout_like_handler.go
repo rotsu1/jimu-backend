@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -44,21 +43,10 @@ func (h *WorkoutLikeHandler) LikeWorkout(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 4 && parts[1] == "workouts" && parts[3] == "likes" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/likes)
+	workoutID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 
@@ -94,21 +82,10 @@ func (h *WorkoutLikeHandler) UnlikeWorkout(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 4 && parts[1] == "workouts" && parts[3] == "likes" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/likes)
+	workoutID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 
@@ -143,21 +120,10 @@ func (h *WorkoutLikeHandler) ListLikes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 4 && parts[1] == "workouts" && parts[3] == "likes" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/likes)
+	workoutID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 

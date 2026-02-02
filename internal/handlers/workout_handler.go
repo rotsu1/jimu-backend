@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -89,24 +88,10 @@ func (h *WorkoutHandler) GetWorkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) > 0 {
-			lastPart := parts[len(parts)-1]
-			if _, err := uuid.Parse(lastPart); err == nil {
-				targetIDStr = lastPart
-			}
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id})
+	workoutID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 
@@ -230,24 +215,10 @@ func (h *WorkoutHandler) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) > 0 {
-			lastPart := parts[len(parts)-1]
-			if _, err := uuid.Parse(lastPart); err == nil {
-				targetIDStr = lastPart
-			}
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id})
+	workoutID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 

@@ -78,7 +78,7 @@ func TestCreateRoutine_Success(t *testing.T) {
 func TestGetRoutine_Success(t *testing.T) {
 	h := NewRoutineHandler(&mockRoutineRepo{})
 
-	req := httptest.NewRequest("GET", "/routines?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("GET", "/routines/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -107,7 +107,7 @@ func TestUpdateRoutine_Success(t *testing.T) {
 	h := NewRoutineHandler(&mockRoutineRepo{})
 
 	body := `{"name": "New Name"}`
-	req := httptest.NewRequest("PUT", "/routines?id=00000000-0000-0000-0000-000000000001", strings.NewReader(body))
+	req := httptest.NewRequest("PUT", "/routines/00000000-0000-0000-0000-000000000001", strings.NewReader(body))
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -121,7 +121,7 @@ func TestUpdateRoutine_Success(t *testing.T) {
 func TestDeleteRoutine_Success(t *testing.T) {
 	h := NewRoutineHandler(&mockRoutineRepo{})
 
-	req := httptest.NewRequest("DELETE", "/routines?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/routines/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -140,7 +140,7 @@ func TestDeleteRoutine_NotFound(t *testing.T) {
 	}
 	h := NewRoutineHandler(mockRepo)
 
-	req := httptest.NewRequest("DELETE", "/routines?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/routines/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

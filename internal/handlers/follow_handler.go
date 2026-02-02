@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -45,24 +44,10 @@ func (h *FollowHandler) FollowUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Request Decoding
-	// Path: /users/{id}/follow
-	// Query: id=...
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// Expect /users/ID/follow
-		if len(parts) >= 4 && parts[1] == "users" && parts[3] == "follow" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing user ID", http.StatusBadRequest)
-		return
-	}
-
-	followingID, err := uuid.Parse(targetIDStr)
+	// Path param only: /users/{id}/follow
+	followingID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing user ID", http.StatusBadRequest)
 		return
 	}
 
@@ -108,21 +93,10 @@ func (h *FollowHandler) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 4 && parts[1] == "users" && parts[3] == "follow" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing user ID", http.StatusBadRequest)
-		return
-	}
-
-	followingID, err := uuid.Parse(targetIDStr)
+	// Path param only: /users/{id}/follow
+	followingID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing user ID", http.StatusBadRequest)
 		return
 	}
 
@@ -158,21 +132,10 @@ func (h *FollowHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// Expect /users/ID/followers
-		if len(parts) >= 4 && parts[1] == "users" && parts[3] == "followers" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing user ID", http.StatusBadRequest)
-		return
-	}
-	targetID, err := uuid.Parse(targetIDStr)
+	// Path param only: /users/{id}/followers
+	targetID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing user ID", http.StatusBadRequest)
 		return
 	}
 
@@ -223,21 +186,10 @@ func (h *FollowHandler) GetFollowing(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// Expect /users/ID/following
-		if len(parts) >= 4 && parts[1] == "users" && parts[3] == "following" {
-			targetIDStr = parts[2]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing user ID", http.StatusBadRequest)
-		return
-	}
-	targetID, err := uuid.Parse(targetIDStr)
+	// Path param only: /users/{id}/following
+	targetID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing user ID", http.StatusBadRequest)
 		return
 	}
 

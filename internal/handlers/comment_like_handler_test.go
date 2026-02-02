@@ -93,7 +93,7 @@ func TestUnlikeComment_NotFound(t *testing.T) {
 func TestListCommentLikes_Success(t *testing.T) {
 	h := NewCommentLikeHandler(&mockCommentLikeRepo{})
 
-	req := httptest.NewRequest("GET", "/comments/likes?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("GET", "/comments/00000000-0000-0000-0000-000000000001/likes", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

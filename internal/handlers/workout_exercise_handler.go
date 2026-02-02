@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -43,22 +42,10 @@ func (h *WorkoutExerciseHandler) AddExercise(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// 2. Request Decoding
-	// Workout ID in path or query
-	workoutIDStr := r.URL.Query().Get("id")
-	if workoutIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 4 && parts[1] == "workouts" && parts[3] == "exercises" {
-			workoutIDStr = parts[2]
-		}
-	}
-	if workoutIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(workoutIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/exercises)
+	workoutID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 
@@ -115,22 +102,10 @@ func (h *WorkoutExerciseHandler) RemoveExercise(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// 2. Request Decoding
-	// Workout Exercise ID
-	targetIDStr := r.URL.Query().Get("exercise_id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 5 && parts[1] == "workouts" && parts[3] == "exercises" {
-			targetIDStr = parts[4] // /workouts/WID/exercises/WEID
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing workout exercise ID", http.StatusBadRequest)
-		return
-	}
-	workoutExerciseID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/exercises/{exerciseId})
+	workoutExerciseID, err := GetUUIDPathParam(r, 3)
 	if err != nil {
-		http.Error(w, "Invalid workout exercise ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout exercise ID", http.StatusBadRequest)
 		return
 	}
 
@@ -165,22 +140,10 @@ func (h *WorkoutExerciseHandler) UpdateExercise(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// 2. Request Decoding
-	targetIDStr := r.URL.Query().Get("exercise_id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// /workouts/WID/exercises/WEID
-		if len(parts) >= 5 && parts[1] == "workouts" && parts[3] == "exercises" {
-			targetIDStr = parts[4]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing workout exercise ID", http.StatusBadRequest)
-		return
-	}
-	workoutExerciseID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/exercises/{exerciseId})
+	workoutExerciseID, err := GetUUIDPathParam(r, 3)
 	if err != nil {
-		http.Error(w, "Invalid workout exercise ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout exercise ID", http.StatusBadRequest)
 		return
 	}
 

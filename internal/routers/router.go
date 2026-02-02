@@ -120,17 +120,24 @@ func (jr *JimuRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// --- User Devices Routes ---
 	if strings.HasPrefix(path, "/user-devices") {
-		if method == "POST" {
-			authMW(http.HandlerFunc(jr.UserDeviceHandler.RegisterDevice)).ServeHTTP(w, r)
-			return
+		parts := strings.Split(strings.Trim(path, "/"), "/")
+		if len(parts) == 1 {
+			// /user-devices
+			if method == "POST" {
+				authMW(http.HandlerFunc(jr.UserDeviceHandler.RegisterDevice)).ServeHTTP(w, r)
+				return
+			}
+			if method == "GET" {
+				authMW(http.HandlerFunc(jr.UserDeviceHandler.ListDevices)).ServeHTTP(w, r)
+				return
+			}
 		}
-		if method == "GET" {
-			authMW(http.HandlerFunc(jr.UserDeviceHandler.ListDevices)).ServeHTTP(w, r)
-			return
-		}
-		if method == "DELETE" {
-			authMW(http.HandlerFunc(jr.UserDeviceHandler.DeleteDevice)).ServeHTTP(w, r)
-			return
+		if len(parts) == 2 {
+			// /user-devices/{id}
+			if method == "DELETE" {
+				authMW(http.HandlerFunc(jr.UserDeviceHandler.DeleteDevice)).ServeHTTP(w, r)
+				return
+			}
 		}
 	}
 

@@ -106,7 +106,7 @@ func TestJimuRouter_Routing(t *testing.T) {
 		// =====================================================================
 		{"Register Device - No Token", "POST", "/user-devices", http.StatusUnauthorized},
 		{"List Devices - No Token", "GET", "/user-devices", http.StatusUnauthorized},
-		{"Delete Device - No Token", "DELETE", "/user-devices", http.StatusUnauthorized},
+		{"Delete Device - No Token", "DELETE", "/user-devices/" + testUUID, http.StatusUnauthorized},
 		{"User Devices - Wrong Method PUT", "PUT", "/user-devices", http.StatusNotFound},
 
 		// =====================================================================

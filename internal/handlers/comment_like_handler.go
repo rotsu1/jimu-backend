@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -41,12 +40,8 @@ func (h *CommentLikeHandler) LikeComment(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 2 {
-		http.Error(w, "Invalid URL path", http.StatusBadRequest)
-		return
-	}
-	commentID, err := uuid.Parse(parts[len(parts)-2])
+	// 2. ID Extraction (path param only: /comments/{id}/likes)
+	commentID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
 		http.Error(w, "Invalid or missing comment ID", http.StatusBadRequest)
 		return
@@ -87,12 +82,8 @@ func (h *CommentLikeHandler) UnlikeComment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 2 {
-		http.Error(w, "Invalid URL path", http.StatusBadRequest)
-		return
-	}
-	commentID, err := uuid.Parse(parts[len(parts)-2])
+	// 2. ID Extraction (path param only: /comments/{id}/likes)
+	commentID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
 		http.Error(w, "Invalid or missing comment ID", http.StatusBadRequest)
 		return
@@ -129,15 +120,10 @@ func (h *CommentLikeHandler) ListLikes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Request Decoding
-	commentIDStr := r.URL.Query().Get("id")
-	if commentIDStr == "" {
-		http.Error(w, "Missing comment ID (query param 'id')", http.StatusBadRequest)
-		return
-	}
-	commentID, err := uuid.Parse(commentIDStr)
+	// 2. ID Extraction (path param only: /comments/{id}/likes)
+	commentID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing comment ID", http.StatusBadRequest)
 		return
 	}
 

@@ -77,7 +77,7 @@ func TestCreateComment_Success(t *testing.T) {
 func TestGetComment_Success(t *testing.T) {
 	h := NewCommentHandler(&mockCommentRepo{})
 
-	req := httptest.NewRequest("GET", "/comments?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("GET", "/comments/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -105,7 +105,7 @@ func TestListComments_ByWorkout(t *testing.T) {
 func TestDeleteComment_Success(t *testing.T) {
 	h := NewCommentHandler(&mockCommentRepo{})
 
-	req := httptest.NewRequest("DELETE", "/comments?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/comments/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

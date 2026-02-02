@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -113,23 +112,10 @@ func (h *CommentHandler) GetComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. ID Extraction
-	targetIDStr := r.URL.Query().Get("id")
-	if targetIDStr == "" {
-		pathParts := strings.Split(r.URL.Path, "/")
-		if len(pathParts) > 0 {
-			lastPart := pathParts[len(pathParts)-1]
-			if _, err := uuid.Parse(lastPart); err == nil {
-				targetIDStr = lastPart
-			}
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing comment ID", http.StatusBadRequest)
-		return
-	}
-	commentID, err := uuid.Parse(targetIDStr)
+	// Path param only: /comments/{id}
+	commentID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid comment ID format", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing comment ID", http.StatusBadRequest)
 		return
 	}
 
@@ -165,24 +151,10 @@ func (h *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. ID Extraction (URL path or query param only - no JSON body for DELETE)
-	commentIDStr := r.URL.Query().Get("id")
-	if commentIDStr == "" {
-		pathParts := strings.Split(r.URL.Path, "/")
-		if len(pathParts) > 0 {
-			lastPart := pathParts[len(pathParts)-1]
-			if _, err := uuid.Parse(lastPart); err == nil {
-				commentIDStr = lastPart
-			}
-		}
-	}
-	if commentIDStr == "" {
-		http.Error(w, "Missing comment ID", http.StatusBadRequest)
-		return
-	}
-	commentID, err := uuid.Parse(commentIDStr)
+	// 2. ID Extraction (path param only: /comments/{id})
+	commentID, err := GetIDFromRequest(r)
 	if err != nil {
-		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing comment ID", http.StatusBadRequest)
 		return
 	}
 

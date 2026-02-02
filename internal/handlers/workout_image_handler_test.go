@@ -69,7 +69,7 @@ func TestAddImageToWorkout_Success(t *testing.T) {
 func TestRemoveImageFromWorkout_Success(t *testing.T) {
 	h := NewWorkoutImageHandler(&mockWorkoutImageRepo{})
 
-	req := httptest.NewRequest("DELETE", "/workout-images/00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/workouts/00000000-0000-0000-0000-000000000001/images/00000000-0000-0000-0000-000000000002", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 

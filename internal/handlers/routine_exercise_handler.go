@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -44,14 +43,8 @@ func (h *RoutineExerciseHandler) AddExercise(w http.ResponseWriter, r *http.Requ
 	}
 
 	// 2. Request Decoding
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 3 {
-		http.Error(w, "Invalid URL path", http.StatusBadRequest)
-		return
-	}
-
-	// The Routine ID is at index 2
-	routineID, err := uuid.Parse(parts[2])
+	// Path param only: /routines/{id}/exercises
+	routineID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
 		http.Error(w, "Invalid or missing routine ID", http.StatusBadRequest)
 		return
@@ -111,7 +104,8 @@ func (h *RoutineExerciseHandler) RemoveExercise(w http.ResponseWriter, r *http.R
 	}
 
 	// 2. Request Decoding
-	routineExerciseID, err := GetIDFromRequest(r)
+	// Path param only: /routines/{id}/exercises/{exerciseId}
+	routineExerciseID, err := GetUUIDPathParam(r, 3)
 	if err != nil {
 		http.Error(w, "Invalid or missing routine exercise ID", http.StatusBadRequest)
 		return

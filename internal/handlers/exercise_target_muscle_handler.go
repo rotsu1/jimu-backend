@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -42,25 +41,10 @@ func (h *ExerciseTargetMuscleHandler) AddTargetMuscle(w http.ResponseWriter, r *
 	}
 
 	// 2. Request Decoding
-	// Exercise ID from path (or query for simplicity unless router used)
-	exerciseIDStr := r.URL.Query().Get("id")
-	if exerciseIDStr == "" {
-		// Attempt parsing from path /exercises/{id}/muscles
-		// Simple splitter
-		parts := strings.Split(r.URL.Path, "/")
-		// Expect /exercises/ID/muscles
-		// parts: [ "", "exercises", "ID", "muscles" ]
-		if len(parts) >= 4 && parts[1] == "exercises" && parts[3] == "muscles" {
-			exerciseIDStr = parts[2]
-		}
-	}
-	if exerciseIDStr == "" {
-		http.Error(w, "Missing exercise ID", http.StatusBadRequest)
-		return
-	}
-	exerciseID, err := uuid.Parse(exerciseIDStr)
+	// Path param only: /exercises/{id}/muscles
+	exerciseID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid exercise ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing exercise ID", http.StatusBadRequest)
 		return
 	}
 
@@ -111,35 +95,15 @@ func (h *ExerciseTargetMuscleHandler) RemoveTargetMuscle(w http.ResponseWriter, 
 	}
 
 	// 2. Request Decoding
-	// Exercise ID and Muscle ID
-	// Path: /exercises/{id}/muscles/{muscle_id}
-	// Query: id=...&muscle_id=...
-	exerciseIDStr := r.URL.Query().Get("id")
-	muscleIDStr := r.URL.Query().Get("muscle_id")
-
-	if exerciseIDStr == "" {
-		// Try parsing path
-		// /exercises/EID/muscles/MID
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 5 && parts[1] == "exercises" && parts[3] == "muscles" {
-			exerciseIDStr = parts[2]
-			muscleIDStr = parts[4]
-		}
-	}
-
-	if exerciseIDStr == "" || muscleIDStr == "" {
-		http.Error(w, "Missing IDs", http.StatusBadRequest)
+	// Path params only: /exercises/{id}/muscles/{muscleId}
+	exerciseID, err := GetUUIDPathParam(r, 1)
+	if err != nil {
+		http.Error(w, "Invalid or missing exercise ID", http.StatusBadRequest)
 		return
 	}
-
-	exerciseID, err := uuid.Parse(exerciseIDStr)
+	muscleID, err := GetUUIDPathParam(r, 3)
 	if err != nil {
-		http.Error(w, "Invalid exercise ID", http.StatusBadRequest)
-		return
-	}
-	muscleID, err := uuid.Parse(muscleIDStr)
-	if err != nil {
-		http.Error(w, "Invalid muscle ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing muscle ID", http.StatusBadRequest)
 		return
 	}
 

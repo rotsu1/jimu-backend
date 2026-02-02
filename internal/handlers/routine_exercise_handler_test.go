@@ -66,8 +66,7 @@ func TestAddExerciseToRoutine_Success(t *testing.T) {
 
 	body := `{"exercise_id": "00000000-0000-0000-0000-000000000002"}`
 
-	// ADD THE QUERY PARAM: ?id=...
-	// This ensures GetIDFromRequest(r) finds the Routine ID
+	// Routine ID is a path param: /routines/{id}/exercises
 	targetID := "00000000-0000-0000-0000-000000000001"
 	url := fmt.Sprintf("/routines/%s/exercises", targetID)
 

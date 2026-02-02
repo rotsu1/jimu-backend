@@ -18,9 +18,11 @@ All handler functions must follow this exact sequence:
     * *If missing/invalid*: Return `401 Unauthorized`.
 2.  **Request Decoding**: Use `json.NewDecoder(r.Body).Decode(&req)`.
     * *If failure*: Return `400 Bad Request`.
-2.1. **Method-Specific Data Extraction**
-    GET / DELETE: Identifiers should be extracted from the URL Path or Query Parameters. Do not expect a JSON body.
-    POST / PUT / PATCH: Always use json.NewDecoder(r.Body).Decode(&req) to extract data.
+    **2.1 URL Parameter Standards (The Golden Rule)**
+    - **Path parameters** (`/resource/{id}`): Use **only** to identify a single, specific resource for `GET`, `PUT`, or `DELETE`.
+      - Example: `GET /workouts/123-abc`
+    - **Query parameters** (`/resource?key=val`): Use **only** for `GET` requests that filter/search/paginate a collection.
+      - Example: `GET /comments?workout_id=123-abc`
 
 3.  **Repository Call**: Pass the context and decoded data to the injected interface.
 4.  **Error Mapping**:

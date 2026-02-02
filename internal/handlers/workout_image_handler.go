@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rotsu1/jimu-backend/internal/middleware"
@@ -42,22 +41,10 @@ func (h *WorkoutImageHandler) AddImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Request Decoding
-	// Workout ID in path or query
-	workoutIDStr := r.URL.Query().Get("id")
-	if workoutIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 4 && parts[1] == "workouts" && parts[3] == "images" {
-			workoutIDStr = parts[2]
-		}
-	}
-	if workoutIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(workoutIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/images)
+	workoutID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 
@@ -111,25 +98,10 @@ func (h *WorkoutImageHandler) RemoveImage(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// 2. Request Decoding
-	// Workout Image ID
-	targetIDStr := r.URL.Query().Get("image_id")
-	if targetIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		// /workout-images/ID or /workouts/WID/images/IID
-		if len(parts) >= 3 && parts[1] == "workout-images" {
-			targetIDStr = parts[2]
-		} else if len(parts) >= 5 && parts[1] == "workouts" && parts[3] == "images" {
-			targetIDStr = parts[4]
-		}
-	}
-	if targetIDStr == "" {
-		http.Error(w, "Missing image ID", http.StatusBadRequest)
-		return
-	}
-	imageID, err := uuid.Parse(targetIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/images/{imageId})
+	imageID, err := GetUUIDPathParam(r, 3)
 	if err != nil {
-		http.Error(w, "Invalid image ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing image ID", http.StatusBadRequest)
 		return
 	}
 
@@ -164,21 +136,10 @@ func (h *WorkoutImageHandler) ListImages(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 2. Request Decoding
-	workoutIDStr := r.URL.Query().Get("id")
-	if workoutIDStr == "" {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 4 && parts[1] == "workouts" && parts[3] == "images" {
-			workoutIDStr = parts[2]
-		}
-	}
-	if workoutIDStr == "" {
-		http.Error(w, "Missing workout ID", http.StatusBadRequest)
-		return
-	}
-	workoutID, err := uuid.Parse(workoutIDStr)
+	// 2. ID Extraction (path param only: /workouts/{id}/images)
+	workoutID, err := GetUUIDPathParam(r, 1)
 	if err != nil {
-		http.Error(w, "Invalid workout ID", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing workout ID", http.StatusBadRequest)
 		return
 	}
 

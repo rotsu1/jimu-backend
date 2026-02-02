@@ -93,7 +93,7 @@ func TestCreateExercise_InvalidInput(t *testing.T) {
 func TestGetExercise_Success(t *testing.T) {
 	h := NewExerciseHandler(&mockExerciseRepo{})
 
-	req := httptest.NewRequest("GET", "/exercises?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("GET", "/exercises/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -112,7 +112,7 @@ func TestGetExercise_NotFound(t *testing.T) {
 	}
 	h := NewExerciseHandler(mockRepo)
 
-	req := httptest.NewRequest("GET", "/exercises?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("GET", "/exercises/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -141,7 +141,7 @@ func TestUpdateExercise_Success(t *testing.T) {
 	h := NewExerciseHandler(&mockExerciseRepo{})
 
 	body := `{"name": "New Name"}`
-	req := httptest.NewRequest("PUT", "/exercises?id=00000000-0000-0000-0000-000000000001", strings.NewReader(body))
+	req := httptest.NewRequest("PUT", "/exercises/00000000-0000-0000-0000-000000000001", strings.NewReader(body))
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
@@ -155,7 +155,7 @@ func TestUpdateExercise_Success(t *testing.T) {
 func TestDeleteExercise_Success(t *testing.T) {
 	h := NewExerciseHandler(&mockExerciseRepo{})
 
-	req := httptest.NewRequest("DELETE", "/exercises?id=00000000-0000-0000-0000-000000000001", nil)
+	req := httptest.NewRequest("DELETE", "/exercises/00000000-0000-0000-0000-000000000001", nil)
 	req = testutils.InjectUserID(req, uuid.New().String())
 	rr := httptest.NewRecorder()
 
