@@ -50,10 +50,9 @@ func (h *WorkoutSetHandler) AddSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Weight      *float64 `json:"weight"`
-		Reps        *int     `json:"reps"`
-		IsCompleted bool     `json:"is_completed"`
-		OrderIndex  int      `json:"order_index"`
+		Weight     *float64 `json:"weight"`
+		Reps       *int     `json:"reps"`
+		OrderIndex int      `json:"order_index"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

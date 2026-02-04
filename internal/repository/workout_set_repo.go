@@ -162,11 +162,6 @@ func (r *WorkoutSetRepository) UpdateWorkoutSet(
 		}
 		i++
 	}
-	if updates.IsCompleted != nil {
-		sets = append(sets, fmt.Sprintf("is_completed = $%d", i))
-		args = append(args, *updates.IsCompleted)
-		i++
-	}
 	if updates.OrderIndex != nil {
 		sets = append(sets, fmt.Sprintf("order_index = $%d", i))
 		if *updates.OrderIndex == 0 {

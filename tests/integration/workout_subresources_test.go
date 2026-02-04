@@ -180,7 +180,7 @@ func TestIntegration_WorkoutSet_AddUpdateRemove(t *testing.T) {
 	weID := seedWorkoutExercise(t, srv, workoutID, exerciseID)
 
 	// 1. Act - POST /workout-exercises/{id}/sets
-	payload := `{"weight": 100.5, "reps": 10, "is_completed": true, "order_index": 1}`
+	payload := `{"weight": 100.5, "reps": 10, "order_index": 1}`
 	req := httptest.NewRequest("POST", "/workout-exercises/"+weID.String()+"/sets", strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)

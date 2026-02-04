@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS public.workout_sets (
     workout_exercise_id uuid REFERENCES public.workout_exercises(id) ON DELETE CASCADE,
     weight numeric,
     reps integer,
-    is_completed boolean DEFAULT false,
     order_index integer NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
