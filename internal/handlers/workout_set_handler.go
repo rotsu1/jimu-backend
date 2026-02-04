@@ -14,7 +14,7 @@ import (
 )
 
 type WorkoutSetScanner interface {
-	CreateWorkoutSet(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, isCompleted bool, orderIndex int, userID uuid.UUID) (*models.WorkoutSet, error)
+	CreateWorkoutSet(ctx context.Context, workoutExerciseID uuid.UUID, weight *float64, reps *int, orderIndex int, userID uuid.UUID) (*models.WorkoutSet, error)
 	GetWorkoutSetByID(ctx context.Context, id uuid.UUID) (*models.WorkoutSet, error)
 	GetWorkoutSetsByWorkoutExerciseID(ctx context.Context, workoutExerciseID uuid.UUID) ([]*models.WorkoutSet, error)
 	UpdateWorkoutSet(ctx context.Context, workoutSetID uuid.UUID, userID uuid.UUID, updates models.UpdateWorkoutSetRequest) error
@@ -60,7 +60,7 @@ func (h *WorkoutSetHandler) AddSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Repo Call
-	ws, err := h.Repo.CreateWorkoutSet(r.Context(), workoutExerciseID, req.Weight, req.Reps, req.IsCompleted, req.OrderIndex, userID)
+	ws, err := h.Repo.CreateWorkoutSet(r.Context(), workoutExerciseID, req.Weight, req.Reps, req.OrderIndex, userID)
 
 	// 4. Error Mapping
 	if err != nil {
