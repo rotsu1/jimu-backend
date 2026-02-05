@@ -238,18 +238,47 @@ func (r *WorkoutRepository) GetTimelineWorkouts(
 		return nil, fmt.Errorf("failed to get timeline workouts: %w", err)
 	}
 	defer rows.Close()
+	return r.scanTimelineWorkoutRows(rows)
+}
 
+// GetFollowingTimelineWorkouts returns timeline workouts from the viewer and users they follow (accepted).
+func (r *WorkoutRepository) GetFollowingTimelineWorkouts(
+	ctx context.Context,
+	viewerID uuid.UUID,
+	limit int,
+	offset int,
+) ([]*models.TimelineWorkout, error) {
+	rows, err := r.DB.Query(ctx, getFollowingTimelineWorkoutsQuery, viewerID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get following timeline workouts: %w", err)
+	}
+	defer rows.Close()
+	return r.scanTimelineWorkoutRows(rows)
+}
+
+// GetForYouTimelineWorkouts returns timeline workouts from any visible user, ordered by engagement (likes + comments) then recency.
+func (r *WorkoutRepository) GetForYouTimelineWorkouts(
+	ctx context.Context,
+	viewerID uuid.UUID,
+	limit int,
+	offset int,
+) ([]*models.TimelineWorkout, error) {
+	rows, err := r.DB.Query(ctx, getForYouTimelineWorkoutsQuery, viewerID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get for-you timeline workouts: %w", err)
+	}
+	defer rows.Close()
+	return r.scanTimelineWorkoutRows(rows)
+}
+
+// scanTimelineWorkoutRows scans pgx rows from a timeline workout query into []*models.TimelineWorkout.
+func (r *WorkoutRepository) scanTimelineWorkoutRows(rows pgx.Rows) ([]*models.TimelineWorkout, error) {
 	workouts := []*models.TimelineWorkout{}
-
 	for rows.Next() {
 		var workout models.TimelineWorkout
-
-		// Create temporary buffers for the JSON columns
 		var exercisesJSON []byte
 		var commentsJSON []byte
 		var imagesJSON []byte
-
-		// 2. Scan all columns including the new JSON ones
 		err := rows.Scan(
 			&workout.ID,
 			&workout.UserID,
@@ -263,37 +292,29 @@ func (r *WorkoutRepository) GetTimelineWorkouts(
 			&workout.LikesCount,
 			&workout.CommentsCount,
 			&workout.UpdatedAt,
-			&exercisesJSON, // mapped to `AS exercises`
-			&commentsJSON,  // mapped to `AS comments`
-			&imagesJSON,    // mapped to `AS images`
+			&exercisesJSON,
+			&commentsJSON,
+			&imagesJSON,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan timeline workout: %w", err)
 		}
-
-		// 3. Hydrate Exercises
 		if len(exercisesJSON) > 0 {
 			if err := json.Unmarshal(exercisesJSON, &workout.Exercises); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal exercises: %w", err)
 			}
 		}
-
-		// 4. Hydrate Comments
 		if len(commentsJSON) > 0 {
 			if err := json.Unmarshal(commentsJSON, &workout.Comments); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal comments: %w", err)
 			}
 		}
-
-		// 5. Hydrate Images
 		if len(imagesJSON) > 0 {
 			if err := json.Unmarshal(imagesJSON, &workout.Images); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal images: %w", err)
 			}
 		}
-
 		workouts = append(workouts, &workout)
 	}
-
 	return workouts, nil
 }

@@ -721,3 +721,184 @@ func TestGetTimelineWorkouts_BlockedUser(t *testing.T) {
 		t.Errorf("Expected 0 timeline workouts when viewer is blocked, got %d", len(workouts))
 	}
 }
+
+func TestGetFollowingTimelineWorkouts(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	viewerID, _, err := testutil.InsertProfile(ctx, db, "viewer")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	// Viewer's own workout
+	nameSelf := "My Workout"
+	_, err = repo.Create(ctx, viewerID, &nameSelf, nil, time.Now().Add(-2*time.Hour), time.Now(), 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	// Followed user and their workout
+	followedID, _, err := testutil.InsertProfile(ctx, db, "followed")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+	_, err = db.Exec(
+		ctx,
+		"INSERT INTO public.follows (follower_id, following_id, status) VALUES ($1, $2, 'accepted')",
+		viewerID,
+		followedID,
+	)
+	if err != nil {
+		t.Fatalf("Failed to insert follow: %v", err)
+	}
+	nameFollowed := "Followed Workout"
+	_, err = repo.Create(ctx, followedID, &nameFollowed, nil, time.Now().Add(-time.Hour), time.Now(), 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	workouts, err := repo.GetFollowingTimelineWorkouts(ctx, viewerID, 20, 0)
+	if err != nil {
+		t.Fatalf("Failed to get following timeline workouts: %v", err)
+	}
+
+	// Should see own workout and followed user's workout (order: recent first, so followed then self if we created in that order - actually self was created first so self is more recent)
+	if len(workouts) != 2 {
+		t.Errorf("Expected 2 timeline workouts (self + followed), got %d", len(workouts))
+	}
+}
+
+func TestGetFollowingTimelineWorkouts_SelfOnly(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	userID, _, err := testutil.InsertProfile(ctx, db, "onlyuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	name := "Solo Workout"
+	_, err = repo.Create(ctx, userID, &name, nil, time.Now(), time.Now(), 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	workouts, err := repo.GetFollowingTimelineWorkouts(ctx, userID, 20, 0)
+	if err != nil {
+		t.Fatalf("Failed to get following timeline workouts: %v", err)
+	}
+
+	if len(workouts) != 1 {
+		t.Errorf("Expected 1 timeline workout (self only), got %d", len(workouts))
+	}
+	if workouts[0].UserID != userID {
+		t.Errorf("Expected workout from self, got user_id %v", workouts[0].UserID)
+	}
+}
+
+func TestGetForYouTimelineWorkouts(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	viewerID, _, err := testutil.InsertProfile(ctx, db, "viewer")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	otherID, _, err := testutil.InsertProfile(ctx, db, "other")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	nameOther := "Other Workout"
+	created, err := repo.Create(ctx, otherID, &nameOther, nil, time.Now(), time.Now(), 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+	// Boost engagement so it appears in "for you" (public account by default)
+	_, err = db.Exec(ctx, "UPDATE public.workouts SET likes_count = 5, comments_count = 1 WHERE id = $1", created.ID)
+	if err != nil {
+		t.Fatalf("Failed to update workout: %v", err)
+	}
+
+	workouts, err := repo.GetForYouTimelineWorkouts(ctx, viewerID, 20, 0)
+	if err != nil {
+		t.Fatalf("Failed to get for-you timeline workouts: %v", err)
+	}
+
+	// Should see at least the other user's workout (visible because public)
+	if len(workouts) < 1 {
+		t.Fatalf("Expected at least 1 for-you workout, got %d", len(workouts))
+	}
+	found := false
+	for _, w := range workouts {
+		if w.ID == created.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Expected to find other user's workout in for-you feed")
+	}
+}
+
+func TestGetForYouTimelineWorkouts_OrderedByEngagement(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	viewerID, _, err := testutil.InsertProfile(ctx, db, "viewer")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	userA, _, err := testutil.InsertProfile(ctx, db, "usera")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+	userB, _, err := testutil.InsertProfile(ctx, db, "userb")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	nameA := "A"
+	nameB := "B"
+	wA, err := repo.Create(ctx, userA, &nameA, nil, time.Now(), time.Now(), 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+	wB, err := repo.Create(ctx, userB, &nameB, nil, time.Now(), time.Now(), 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+	// A has higher engagement
+	_, err = db.Exec(ctx, "UPDATE public.workouts SET likes_count = 10, comments_count = 2 WHERE id = $1", wA.ID)
+	if err != nil {
+		t.Fatalf("Failed to update: %v", err)
+	}
+	_, err = db.Exec(ctx, "UPDATE public.workouts SET likes_count = 1, comments_count = 0 WHERE id = $1", wB.ID)
+	if err != nil {
+		t.Fatalf("Failed to update: %v", err)
+	}
+
+	workouts, err := repo.GetForYouTimelineWorkouts(ctx, viewerID, 20, 0)
+	if err != nil {
+		t.Fatalf("Failed to get for-you timeline workouts: %v", err)
+	}
+
+	if len(workouts) != 2 {
+		t.Fatalf("Expected 2 workouts, got %d", len(workouts))
+	}
+	// First should be higher engagement (wA: 10+2=12, wB: 1+0=1)
+	if workouts[0].ID != wA.ID {
+		t.Errorf("Expected first workout to be higher engagement (wA), got %v", workouts[0].ID)
+	}
+}

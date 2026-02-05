@@ -247,6 +247,21 @@ func (jr *JimuRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// GET /workouts/timeline/following -> GetFollowingTimelineWorkouts (query: limit, offset)
+		// GET /workouts/timeline/for-you -> GetForYouTimelineWorkouts (query: limit, offset)
+		if len(parts) == 3 && parts[1] == "timeline" {
+			if method == "GET" {
+				switch parts[2] {
+				case "following":
+					authMW(http.HandlerFunc(jr.WorkoutHandler.GetFollowingTimelineWorkouts)).ServeHTTP(w, r)
+					return
+				case "for-you":
+					authMW(http.HandlerFunc(jr.WorkoutHandler.GetForYouTimelineWorkouts)).ServeHTTP(w, r)
+					return
+				}
+			}
+		}
+
 		// GET /workouts/timeline -> GetTimelineWorkouts (query: user_id, limit, offset)
 		if len(parts) == 2 && parts[1] == "timeline" {
 			if method == "GET" {

@@ -175,3 +175,203 @@ const getTimelineWorkoutsQuery = `
   ORDER BY w.started_at DESC
   LIMIT $3 OFFSET $4
 `
+
+// getFollowingTimelineWorkoutsQuery returns timeline workouts from the viewer and users they follow.
+// $1 = viewerID, $2 = limit, $3 = offset
+const getFollowingTimelineWorkoutsQuery = `
+  SELECT 
+    w.id, 
+    w.user_id, 
+    p.username, 
+    p.avatar_url, 
+    w.name, 
+    w.comment, 
+    w.started_at, 
+    w.ended_at, 
+    w.total_weight, 
+    w.likes_count, 
+    w.comments_count, 
+    w.updated_at,
+    COALESCE(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'id', we.id,
+            'exercise_id', we.exercise_id,
+            'name', e.name, 
+            'order_index', we.order_index,
+            'sets', COALESCE(
+              (
+                SELECT json_agg(
+                  json_build_object(
+                    'id', ws.id,
+                    'weight', ws.weight,
+                    'reps', ws.reps,
+                    'order_index', ws.order_index
+                  ) ORDER BY ws.order_index ASC
+                )
+                FROM public.workout_sets ws
+                WHERE ws.workout_exercise_id = we.id
+              ), '[]'::json
+            )
+          ) ORDER BY we.order_index ASC
+        )
+        FROM public.workout_exercises we
+        JOIN public.exercises e ON we.exercise_id = e.id
+        WHERE we.workout_id = w.id
+      ), '[]'::json
+    ) AS exercises,
+    COALESCE(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'id', wc.id,
+            'user_id', wc.user_id,
+            'content', wc.content,
+            'likes_count', wc.likes_count,
+            'created_at', wc.created_at,
+            'username', cp.username,
+            'avatar_url', cp.avatar_url,
+            'comments', '[]'::json
+          ) ORDER BY wc.created_at ASC
+        )
+        FROM public.comments wc
+        JOIN public.profiles cp ON wc.user_id = cp.id
+        WHERE wc.workout_id = w.id
+      ), '[]'::json
+    ) AS comments,
+    COALESCE(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'id', wi.id,
+            'storage_path', wi.storage_path,
+            'display_order', wi.display_order
+          ) ORDER BY wi.display_order ASC
+        )
+        FROM public.workout_images wi
+        WHERE wi.workout_id = w.id
+      ), '[]'::json
+    ) AS images
+  FROM public.workouts w
+  JOIN public.profiles p ON w.user_id = p.id
+  WHERE (w.user_id = $1 OR w.user_id IN (
+      SELECT f.following_id FROM public.follows f
+      WHERE f.follower_id = $1 AND f.status = 'accepted'
+    ))
+    AND NOT EXISTS (
+        SELECT 1 FROM public.blocked_users b
+        WHERE (b.blocker_id = w.user_id AND b.blocked_id = $1)
+           OR (b.blocker_id = $1 AND b.blocked_id = w.user_id)
+    )
+    AND (
+        p.is_private_account = false 
+        OR w.user_id = $1
+        OR EXISTS (
+            SELECT 1 FROM public.follows f
+            WHERE f.follower_id = $1 
+              AND f.following_id = w.user_id 
+              AND f.status = 'accepted'
+        )
+    )
+  ORDER BY w.started_at DESC
+  LIMIT $2 OFFSET $3
+`
+
+// getForYouTimelineWorkoutsQuery returns timeline workouts from any visible user, ordered by engagement (likes + comments) then recency.
+// $1 = viewerID, $2 = limit, $3 = offset
+const getForYouTimelineWorkoutsQuery = `
+  SELECT 
+    w.id, 
+    w.user_id, 
+    p.username, 
+    p.avatar_url, 
+    w.name, 
+    w.comment, 
+    w.started_at, 
+    w.ended_at, 
+    w.total_weight, 
+    w.likes_count, 
+    w.comments_count, 
+    w.updated_at,
+    COALESCE(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'id', we.id,
+            'exercise_id', we.exercise_id,
+            'name', e.name, 
+            'order_index', we.order_index,
+            'sets', COALESCE(
+              (
+                SELECT json_agg(
+                  json_build_object(
+                    'id', ws.id,
+                    'weight', ws.weight,
+                    'reps', ws.reps,
+                    'order_index', ws.order_index
+                  ) ORDER BY ws.order_index ASC
+                )
+                FROM public.workout_sets ws
+                WHERE ws.workout_exercise_id = we.id
+              ), '[]'::json
+            )
+          ) ORDER BY we.order_index ASC
+        )
+        FROM public.workout_exercises we
+        JOIN public.exercises e ON we.exercise_id = e.id
+        WHERE we.workout_id = w.id
+      ), '[]'::json
+    ) AS exercises,
+    COALESCE(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'id', wc.id,
+            'user_id', wc.user_id,
+            'content', wc.content,
+            'likes_count', wc.likes_count,
+            'created_at', wc.created_at,
+            'username', cp.username,
+            'avatar_url', cp.avatar_url,
+            'comments', '[]'::json
+          ) ORDER BY wc.created_at ASC
+        )
+        FROM public.comments wc
+        JOIN public.profiles cp ON wc.user_id = cp.id
+        WHERE wc.workout_id = w.id
+      ), '[]'::json
+    ) AS comments,
+    COALESCE(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'id', wi.id,
+            'storage_path', wi.storage_path,
+            'display_order', wi.display_order
+          ) ORDER BY wi.display_order ASC
+        )
+        FROM public.workout_images wi
+        WHERE wi.workout_id = w.id
+      ), '[]'::json
+    ) AS images
+  FROM public.workouts w
+  JOIN public.profiles p ON w.user_id = p.id
+  WHERE NOT EXISTS (
+        SELECT 1 FROM public.blocked_users b
+        WHERE (b.blocker_id = w.user_id AND b.blocked_id = $1)
+           OR (b.blocker_id = $1 AND b.blocked_id = w.user_id)
+    )
+    AND (
+        p.is_private_account = false 
+        OR w.user_id = $1
+        OR EXISTS (
+            SELECT 1 FROM public.follows f
+            WHERE f.follower_id = $1 
+              AND f.following_id = w.user_id 
+              AND f.status = 'accepted'
+        )
+    )
+  ORDER BY (w.likes_count + w.comments_count) DESC, w.started_at DESC
+  LIMIT $2 OFFSET $3
+`

@@ -22,6 +22,8 @@ type WorkoutScanner interface {
 	UpdateWorkout(ctx context.Context, id uuid.UUID, updates models.UpdateWorkoutRequest, userID uuid.UUID) error
 	DeleteWorkout(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 	GetTimelineWorkouts(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID, limit int, offset int) ([]*models.TimelineWorkout, error)
+	GetFollowingTimelineWorkouts(ctx context.Context, viewerID uuid.UUID, limit int, offset int) ([]*models.TimelineWorkout, error)
+	GetForYouTimelineWorkouts(ctx context.Context, viewerID uuid.UUID, limit int, offset int) ([]*models.TimelineWorkout, error)
 }
 
 type WorkoutHandler struct {
@@ -267,21 +269,10 @@ func (h *WorkoutHandler) GetTimelineWorkouts(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	limit := 20
-	offset := 0
-	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		limit, err = strconv.Atoi(limitStr)
-		if err != nil {
-			http.Error(w, "Invalid limit", http.StatusBadRequest)
-			return
-		}
-	}
-	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
-		offset, err = strconv.Atoi(offsetStr)
-		if err != nil {
-			http.Error(w, "Invalid offset", http.StatusBadRequest)
-			return
-		}
+	limit, offset, err := parseLimitOffset(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// 3. Repo Call
@@ -300,4 +291,87 @@ func (h *WorkoutHandler) GetTimelineWorkouts(w http.ResponseWriter, r *http.Requ
 		workouts = []*models.TimelineWorkout{}
 	}
 	json.NewEncoder(w).Encode(workouts)
+}
+
+func (h *WorkoutHandler) GetFollowingTimelineWorkouts(w http.ResponseWriter, r *http.Request) {
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusUnauthorized)
+		return
+	}
+
+	limit, offset, err := parseLimitOffset(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	workouts, err := h.Repo.GetFollowingTimelineWorkouts(r.Context(), userID, limit, offset)
+	if err != nil {
+		log.Printf("Get following timeline workouts error: %v", err)
+		http.Error(w, "Failed to get following timeline workouts", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if workouts == nil {
+		workouts = []*models.TimelineWorkout{}
+	}
+	json.NewEncoder(w).Encode(workouts)
+}
+
+func (h *WorkoutHandler) GetForYouTimelineWorkouts(w http.ResponseWriter, r *http.Request) {
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusUnauthorized)
+		return
+	}
+
+	limit, offset, err := parseLimitOffset(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	workouts, err := h.Repo.GetForYouTimelineWorkouts(r.Context(), userID, limit, offset)
+	if err != nil {
+		log.Printf("Get for-you timeline workouts error: %v", err)
+		http.Error(w, "Failed to get for-you timeline workouts", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if workouts == nil {
+		workouts = []*models.TimelineWorkout{}
+	}
+	json.NewEncoder(w).Encode(workouts)
+}
+
+// parseLimitOffset reads limit and offset from request query; returns (20, 0) by default.
+func parseLimitOffset(r *http.Request) (limit int, offset int, err error) {
+	limit = 20
+	offset = 0
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			return 0, 0, errors.New("Invalid limit")
+		}
+	}
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		offset, err = strconv.Atoi(offsetStr)
+		if err != nil {
+			return 0, 0, errors.New("Invalid offset")
+		}
+	}
+	return limit, offset, nil
 }
