@@ -552,3 +552,172 @@ func TestDeleteWorkoutNotFound(t *testing.T) {
 		t.Errorf("Expected ErrWorkoutNotFound, but got %v", err)
 	}
 }
+
+func TestGetTimelineWorkouts(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	userID, _, err := testutil.InsertProfile(ctx, db, "testuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	name := "Timeline Workout"
+	comment := "Great session"
+	startedAt := time.Now().Add(-time.Hour)
+	endedAt := time.Now()
+	workout, err := repo.Create(ctx, userID, &name, &comment, startedAt, endedAt, 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	workouts, err := repo.GetTimelineWorkouts(ctx, userID, userID, 20, 0)
+	if err != nil {
+		t.Fatalf("Failed to get timeline workouts: %v", err)
+	}
+
+	if len(workouts) != 1 {
+		t.Fatalf("Expected 1 timeline workout, got %d", len(workouts))
+	}
+
+	tw := workouts[0]
+	if tw.ID != workout.ID {
+		t.Errorf("ID mismatch: got %v, want %v", tw.ID, workout.ID)
+	}
+	if tw.UserID != userID {
+		t.Errorf("UserID mismatch: got %v, want %v", tw.UserID, userID)
+	}
+	if tw.Username != "testuser" {
+		t.Errorf("Username mismatch: got %q, want %q", tw.Username, "testuser")
+	}
+	if tw.Name == nil || *tw.Name != name {
+		t.Errorf("Name mismatch: got %v, want %q", tw.Name, name)
+	}
+	if tw.Comment == nil || *tw.Comment != comment {
+		t.Errorf("Comment mismatch: got %v, want %q", tw.Comment, comment)
+	}
+	if tw.LikesCount != 0 {
+		t.Errorf("LikesCount want 0, got %d", tw.LikesCount)
+	}
+	if tw.CommentsCount != 0 {
+		t.Errorf("CommentsCount want 0, got %d", tw.CommentsCount)
+	}
+	if tw.Exercises == nil {
+		t.Error("Exercises should be non-nil slice")
+	} else if len(tw.Exercises) != 0 {
+		t.Errorf("Exercises should be empty, got %d", len(tw.Exercises))
+	}
+	if tw.Comments == nil {
+		t.Error("Comments should be non-nil slice")
+	} else if len(tw.Comments) != 0 {
+		t.Errorf("Comments should be empty, got %d", len(tw.Comments))
+	}
+	if tw.Images == nil {
+		t.Error("Images should be non-nil slice")
+	} else if len(tw.Images) != 0 {
+		t.Errorf("Images should be empty, got %d", len(tw.Images))
+	}
+}
+
+func TestGetTimelineWorkouts_Empty(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	userID, _, err := testutil.InsertProfile(ctx, db, "testuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	workouts, err := repo.GetTimelineWorkouts(ctx, userID, userID, 20, 0)
+	if err != nil {
+		t.Fatalf("Failed to get timeline workouts: %v", err)
+	}
+
+	if workouts == nil {
+		t.Error("Expected non-nil empty slice, got nil")
+	}
+	if len(workouts) != 0 {
+		t.Errorf("Expected 0 timeline workouts, got %d", len(workouts))
+	}
+}
+
+func TestGetTimelineWorkouts_Pagination(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	userID, _, err := testutil.InsertProfile(ctx, db, "testuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	for i := 0; i < 5; i++ {
+		name := "Workout"
+		_, err = repo.Create(ctx, userID, &name, nil, time.Now().Add(time.Duration(i)*time.Hour), time.Now(), 0)
+		if err != nil {
+			t.Fatalf("Failed to create workout: %v", err)
+		}
+	}
+
+	workouts, err := repo.GetTimelineWorkouts(ctx, userID, userID, 2, 0)
+	if err != nil {
+		t.Fatalf("Failed to get timeline workouts: %v", err)
+	}
+	if len(workouts) != 2 {
+		t.Errorf("Expected 2 with limit 2, got %d", len(workouts))
+	}
+
+	workouts, err = repo.GetTimelineWorkouts(ctx, userID, userID, 2, 2)
+	if err != nil {
+		t.Fatalf("Failed to get timeline workouts: %v", err)
+	}
+	if len(workouts) != 2 {
+		t.Errorf("Expected 2 with offset 2, got %d", len(workouts))
+	}
+}
+
+func TestGetTimelineWorkouts_BlockedUser(t *testing.T) {
+	db := testutil.SetupTestDB(t)
+	defer db.Close()
+	repo := NewWorkoutRepository(db)
+	ctx := context.Background()
+
+	userID, _, err := testutil.InsertProfile(ctx, db, "testuser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	_, err = repo.Create(ctx, userID, nil, nil, time.Now(), time.Now(), 0)
+	if err != nil {
+		t.Fatalf("Failed to create workout: %v", err)
+	}
+
+	blockedUserID, _, err := testutil.InsertProfile(ctx, db, "blockeduser")
+	if err != nil {
+		t.Fatalf("Failed to insert profile: %v", err)
+	}
+
+	_, err = db.Exec(
+		ctx,
+		"INSERT INTO public.blocked_users (blocker_id, blocked_id) VALUES ($1, $2)",
+		userID,
+		blockedUserID,
+	)
+	if err != nil {
+		t.Fatalf("Failed to insert blocked user: %v", err)
+	}
+
+	workouts, err := repo.GetTimelineWorkouts(ctx, blockedUserID, userID, 10, 0)
+	if err != nil {
+		t.Fatalf("Failed to get timeline workouts: %v", err)
+	}
+
+	if len(workouts) != 0 {
+		t.Errorf("Expected 0 timeline workouts when viewer is blocked, got %d", len(workouts))
+	}
+}

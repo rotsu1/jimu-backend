@@ -152,6 +152,11 @@ func TestJimuRouter_Routing(t *testing.T) {
 		{"Workouts Collection - Wrong Method DELETE", "DELETE", "/workouts", http.StatusNotFound},
 		{"Workouts Collection - Wrong Method PUT", "PUT", "/workouts", http.StatusNotFound},
 
+		// Timeline (GET /workouts/timeline)
+		{"Get Timeline Workouts - No Token", "GET", "/workouts/timeline", http.StatusUnauthorized},
+		{"Timeline - Wrong Method POST", "POST", "/workouts/timeline", http.StatusNotFound},
+		{"Timeline - Wrong Method PUT", "PUT", "/workouts/timeline", http.StatusNotFound},
+
 		// Single workout routes
 		{"Get Workout - No Token", "GET", "/workouts/" + testUUID, http.StatusUnauthorized},
 		{"Update Workout - No Token", "PUT", "/workouts/" + testUUID, http.StatusUnauthorized},

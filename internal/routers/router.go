@@ -247,8 +247,16 @@ func (jr *JimuRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// /workouts/{id}
-		if len(parts) == 2 {
+		// GET /workouts/timeline -> GetTimelineWorkouts (query: user_id, limit, offset)
+		if len(parts) == 2 && parts[1] == "timeline" {
+			if method == "GET" {
+				authMW(http.HandlerFunc(jr.WorkoutHandler.GetTimelineWorkouts)).ServeHTTP(w, r)
+				return
+			}
+		}
+
+		// /workouts/{id} (exclude "timeline" which is handled above)
+		if len(parts) == 2 && parts[1] != "timeline" {
 			if method == "GET" {
 				authMW(http.HandlerFunc(jr.WorkoutHandler.GetWorkout)).ServeHTTP(w, r)
 				return

@@ -17,11 +17,12 @@ import (
 // --- Mocks ---
 
 type mockWorkoutRepo struct {
-	CreateFunc              func(ctx context.Context, userID uuid.UUID, name *string, comment *string, startedAt time.Time, endedAt time.Time, durationSeconds int) (*models.Workout, error)
-	GetWorkoutByIDFunc      func(ctx context.Context, workoutID uuid.UUID, viewerID uuid.UUID) (*models.Workout, error)
-	GetWorkoutsByUserIDFunc func(ctx context.Context, targetID uuid.UUID, viewerID uuid.UUID, limit int, offset int) ([]*models.Workout, error)
-	UpdateWorkoutFunc       func(ctx context.Context, id uuid.UUID, updates models.UpdateWorkoutRequest, userID uuid.UUID) error
-	DeleteWorkoutFunc       func(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
+	CreateFunc               func(ctx context.Context, userID uuid.UUID, name *string, comment *string, startedAt time.Time, endedAt time.Time, durationSeconds int) (*models.Workout, error)
+	GetWorkoutByIDFunc       func(ctx context.Context, workoutID uuid.UUID, viewerID uuid.UUID) (*models.Workout, error)
+	GetWorkoutsByUserIDFunc  func(ctx context.Context, targetID uuid.UUID, viewerID uuid.UUID, limit int, offset int) ([]*models.Workout, error)
+	GetTimelineWorkoutsFunc  func(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID, limit int, offset int) ([]*models.TimelineWorkout, error)
+	UpdateWorkoutFunc        func(ctx context.Context, id uuid.UUID, updates models.UpdateWorkoutRequest, userID uuid.UUID) error
+	DeleteWorkoutFunc        func(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 
 func (m *mockWorkoutRepo) Create(ctx context.Context, userID uuid.UUID, name *string, comment *string, startedAt time.Time, endedAt time.Time, durationSeconds int) (*models.Workout, error) {
@@ -57,6 +58,13 @@ func (m *mockWorkoutRepo) DeleteWorkout(ctx context.Context, id uuid.UUID, userI
 		return m.DeleteWorkoutFunc(ctx, id, userID)
 	}
 	return nil
+}
+
+func (m *mockWorkoutRepo) GetTimelineWorkouts(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID, limit int, offset int) ([]*models.TimelineWorkout, error) {
+	if m.GetTimelineWorkoutsFunc != nil {
+		return m.GetTimelineWorkoutsFunc(ctx, viewerID, targetID, limit, offset)
+	}
+	return []*models.TimelineWorkout{}, nil
 }
 
 // --- Tests ---
@@ -149,5 +157,111 @@ func TestDeleteWorkout_NotFound(t *testing.T) {
 
 	if rr.Code != http.StatusNotFound {
 		t.Errorf("expected 404 Not Found, got %d", rr.Code)
+	}
+}
+
+func TestGetTimelineWorkouts(t *testing.T) {
+	viewerID := uuid.New()
+
+	tests := []struct {
+		name           string
+		url            string
+		injectUserID   bool
+		mockErr        error
+		mockWorkouts   []*models.TimelineWorkout
+		expectedStatus int
+	}{
+		{
+			name:           "Success - returns 200 and timeline",
+			url:            "/workouts/timeline",
+			injectUserID:   true,
+			mockWorkouts:   []*models.TimelineWorkout{},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Unauthorized - no user in context",
+			url:            "/workouts/timeline",
+			injectUserID:   false,
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "Invalid user_id query - 400",
+			url:            "/workouts/timeline?user_id=not-a-uuid",
+			injectUserID:   true,
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "Invalid limit - 400",
+			url:            "/workouts/timeline?limit=abc",
+			injectUserID:   true,
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "Invalid offset - 400",
+			url:            "/workouts/timeline?offset=xyz",
+			injectUserID:   true,
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "DB error - 500",
+			url:            "/workouts/timeline",
+			injectUserID:   true,
+			mockErr:        context.DeadlineExceeded,
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := &mockWorkoutRepo{
+				GetTimelineWorkoutsFunc: func(ctx context.Context, vID, tID uuid.UUID, limit, offset int) ([]*models.TimelineWorkout, error) {
+					if tt.mockErr != nil {
+						return nil, tt.mockErr
+					}
+					return tt.mockWorkouts, nil
+				},
+			}
+			h := NewWorkoutHandler(mockRepo)
+
+			req := httptest.NewRequest("GET", tt.url, nil)
+			if tt.injectUserID {
+				req = testutils.InjectUserID(req, viewerID.String())
+			}
+			rr := httptest.NewRecorder()
+
+			h.GetTimelineWorkouts(rr, req)
+
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, rr.Code)
+			}
+		})
+	}
+}
+
+func TestGetTimelineWorkouts_Success_WithTargetUser(t *testing.T) {
+	viewerID := uuid.New()
+	targetID := uuid.New()
+
+	mockRepo := &mockWorkoutRepo{
+		GetTimelineWorkoutsFunc: func(ctx context.Context, vID, tID uuid.UUID, limit, offset int) ([]*models.TimelineWorkout, error) {
+			if tID != targetID || vID != viewerID {
+				t.Errorf("repo called with targetID=%v viewerID=%v", tID, vID)
+			}
+			if limit != 10 || offset != 5 {
+				t.Errorf("repo called with limit=%d offset=%d", limit, offset)
+			}
+			return []*models.TimelineWorkout{}, nil
+		},
+	}
+	h := NewWorkoutHandler(mockRepo)
+
+	req := httptest.NewRequest("GET", "/workouts/timeline?user_id="+targetID.String()+"&limit=10&offset=5", nil)
+	req = testutils.InjectUserID(req, viewerID.String())
+	rr := httptest.NewRecorder()
+
+	h.GetTimelineWorkouts(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", rr.Code)
 	}
 }

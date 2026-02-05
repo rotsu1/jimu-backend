@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -221,4 +222,78 @@ func (r *WorkoutRepository) DeleteWorkout(
 	}
 
 	return nil
+}
+
+func (r *WorkoutRepository) GetTimelineWorkouts(
+	ctx context.Context,
+	viewerID uuid.UUID, // $2: The person viewing the feed
+	targetID uuid.UUID, // $1: The person whose profile we are looking at
+	limit int, // $3
+	offset int, // $4
+) ([]*models.TimelineWorkout, error) {
+
+	// 1. Query with correct Argument Order
+	rows, err := r.DB.Query(ctx, getTimelineWorkoutsQuery, targetID, viewerID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get timeline workouts: %w", err)
+	}
+	defer rows.Close()
+
+	workouts := []*models.TimelineWorkout{}
+
+	for rows.Next() {
+		var workout models.TimelineWorkout
+
+		// Create temporary buffers for the JSON columns
+		var exercisesJSON []byte
+		var commentsJSON []byte
+		var imagesJSON []byte
+
+		// 2. Scan all columns including the new JSON ones
+		err := rows.Scan(
+			&workout.ID,
+			&workout.UserID,
+			&workout.Username,
+			&workout.AvatarURL,
+			&workout.Name,
+			&workout.Comment,
+			&workout.StartedAt,
+			&workout.EndedAt,
+			&workout.TotalWeight,
+			&workout.LikesCount,
+			&workout.CommentsCount,
+			&workout.UpdatedAt,
+			&exercisesJSON, // mapped to `AS exercises`
+			&commentsJSON,  // mapped to `AS comments`
+			&imagesJSON,    // mapped to `AS images`
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan timeline workout: %w", err)
+		}
+
+		// 3. Hydrate Exercises
+		if len(exercisesJSON) > 0 {
+			if err := json.Unmarshal(exercisesJSON, &workout.Exercises); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal exercises: %w", err)
+			}
+		}
+
+		// 4. Hydrate Comments
+		if len(commentsJSON) > 0 {
+			if err := json.Unmarshal(commentsJSON, &workout.Comments); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal comments: %w", err)
+			}
+		}
+
+		// 5. Hydrate Images
+		if len(imagesJSON) > 0 {
+			if err := json.Unmarshal(imagesJSON, &workout.Images); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal images: %w", err)
+			}
+		}
+
+		workouts = append(workouts, &workout)
+	}
+
+	return workouts, nil
 }

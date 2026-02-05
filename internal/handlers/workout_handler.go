@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,6 +21,7 @@ type WorkoutScanner interface {
 	GetWorkoutsByUserID(ctx context.Context, targetID uuid.UUID, viewerID uuid.UUID, limit int, offset int) ([]*models.Workout, error)
 	UpdateWorkout(ctx context.Context, id uuid.UUID, updates models.UpdateWorkoutRequest, userID uuid.UUID) error
 	DeleteWorkout(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
+	GetTimelineWorkouts(ctx context.Context, viewerID uuid.UUID, targetID uuid.UUID, limit int, offset int) ([]*models.TimelineWorkout, error)
 }
 
 type WorkoutHandler struct {
@@ -238,4 +240,64 @@ func (h *WorkoutHandler) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
 
 	// 5. Response Construction
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *WorkoutHandler) GetTimelineWorkouts(w http.ResponseWriter, r *http.Request) {
+	// 1. Context Check
+	ctxID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthenticated", http.StatusUnauthorized)
+		return
+	}
+	userID, err := uuid.Parse(ctxID)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusUnauthorized)
+		return
+	}
+
+	var targetID uuid.UUID
+	targetUserStr := r.URL.Query().Get("user_id")
+	if targetUserStr == "" {
+		targetID = userID
+	} else {
+		targetID, err = uuid.Parse(targetUserStr)
+		if err != nil {
+			http.Error(w, "Invalid user ID", http.StatusBadRequest)
+			return
+		}
+	}
+
+	limit := 20
+	offset := 0
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			http.Error(w, "Invalid limit", http.StatusBadRequest)
+			return
+		}
+	}
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		offset, err = strconv.Atoi(offsetStr)
+		if err != nil {
+			http.Error(w, "Invalid offset", http.StatusBadRequest)
+			return
+		}
+	}
+
+	// 3. Repo Call
+	workouts, err := h.Repo.GetTimelineWorkouts(r.Context(), userID, targetID, limit, offset)
+
+	// 4. Error Mapping
+	if err != nil {
+		log.Printf("Get timeline workouts error: %v", err)
+		http.Error(w, "Failed to get timeline workouts", http.StatusInternalServerError)
+		return
+	}
+
+	// 5. Response Construction
+	w.Header().Set("Content-Type", "application/json")
+	if workouts == nil {
+		workouts = []*models.TimelineWorkout{}
+	}
+	json.NewEncoder(w).Encode(workouts)
 }
