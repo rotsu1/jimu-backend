@@ -15,13 +15,13 @@ const getWorkoutSetsByWorkoutExerciseIDQuery = `
 
 const insertWorkoutSetQuery = `
   INSERT INTO public.workout_sets (workout_exercise_id, weight, reps, order_index)
-  SELECT $1, $2, $3, $4, $5
+  SELECT $1, $2, $3, $4
   WHERE EXISTS (
       -- Guard: Ensure the parent exercise belongs to a workout owned by this user
       SELECT 1 FROM public.workout_exercises we
       JOIN public.workouts w ON we.workout_id = w.id
       WHERE we.id = $1 
-      AND (w.user_id = $6 OR EXISTS (SELECT 1 FROM public.sys_admins WHERE user_id = $6))
+      AND (w.user_id = $5 OR EXISTS (SELECT 1 FROM public.sys_admins WHERE user_id = $5))
   )
   RETURNING id, workout_exercise_id, weight, reps, order_index, created_at, updated_at
 `
